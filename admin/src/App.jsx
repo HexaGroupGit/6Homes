@@ -21,6 +21,7 @@ import QuoteAccept from './components/QuoteAccept.jsx'
 import SignPage from './components/SignPage.jsx'
 import PortalApp from './components/portal/PortalApp.jsx'
 import PortalLogin from './components/portal/PortalLogin.jsx'
+import SetPassword from './components/SetPassword.jsx'
 
 function NotConfigured() {
   return (
@@ -85,6 +86,11 @@ export default function App() {
         */}
         <Route path="/quote/:token" element={<QuoteAccept />} />
         <Route path="/sign/:token" element={<SignPage />} />
+
+        {/* Where an invitation or a password reset lands. Outside the admin
+            gate on purpose: whoever is here does not have a password yet, so
+            they cannot sign in to reach a screen that is behind one. */}
+        <Route path="/set-password" element={<SetPassword />} />
 
         {/*
           The client portal. Same domain and same deployment as the CRM, split
