@@ -13,6 +13,7 @@
 // It never deletes anything.
 
 import fs from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
@@ -25,7 +26,28 @@ const MEDIA_DIR = path.join(PUBLIC_DIR, 'media')
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, 'downloads')
 const OUT_DIR = path.join(ROOT, 'scripts', 'out')
 
+// Originals are cached here, outside the repo's published assets. They are the
+// full-resolution WordPress uploads — 355 MB of them — and only the optimised
+// copies belong in site/public/media. Keeping them apart also makes the run
+// idempotent: previously the optimiser converted a PNG to JPEG and deleted the
+// source, so the next run saw it missing and downloaded all 88 again.
+const MEDIA_SRC = path.join(OUT_DIR, 'media-src')
+
 const PUSH = process.argv.includes('--push')
+
+// --push talks to Supabase, and the credentials live in admin/.env.local rather
+// than the ambient environment on a developer's machine.
+for (const file of ['admin/.env.local', 'site/.env.local']) {
+  try {
+    const text = readFileSync(path.join(ROOT, file), 'utf8')
+    for (const line of text.split('\n')) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
+    }
+  } catch {
+    // Not present — the ambient environment is expected to supply them.
+  }
+}
 
 // slug on WordPress → what it becomes for us.
 //
@@ -194,7 +216,7 @@ async function migrateLibrary() {
 
   let got = 0, had = 0, failed = 0
   for (const url of images) {
-    const r = await download(url, path.join(MEDIA_DIR, url.split('/').pop()))
+    const r = await download(url, path.join(MEDIA_SRC, url.split('/').pop()))
     if (r.ok) got++
     else if (r.skipped) had++
     else { failed++; log(`  ! ${url.split('/').pop()} — ${r.error}`) }
@@ -205,37 +227,41 @@ async function migrateLibrary() {
 }
 
 /**
- * Re-encode everything in site/public/media for the web.
+ * Build site/public/media from the cached originals.
  *
- * WordPress stores the originals: 88 PNGs totalling 333 MB, several of them
- * 15–20 MB each. Those are committed to the repo and served straight to
- * visitors — a gallery image on a design page was a 20 MB download, and git
- * history keeps every byte forever.
+ * WordPress serves the originals: 88 PNGs totalling 333 MB, several 15–20 MB
+ * each. Committing those would put 355 MB in git history permanently, and the
+ * site serves gallery images through a plain <img>, so a visitor opening a
+ * design page was downloading a 20 MB PNG.
  *
- * Photographs become JPEG at 2000px, which is more than any layout here uses.
- * Floorplans stay PNG, because they are line art and JPEG would fur the thin
- * rules and dimension text.
+ * Photographs become JPEG at 2000px, wider than any layout here uses.
+ * Floorplans stay PNG — they are line art, and JPEG furs the thin rules and the
+ * dimension text.
  *
- * Returns a map of old path → new path so the records that reference them can be
- * rewritten; the originals remain in OneDrive and on WordPress.
+ * Reads from the cache and writes to the published folder, so re-running is
+ * cheap and never re-downloads. Returns a map of source path → published path,
+ * because the records were scraped against the original filenames.
  */
 async function optimiseWebMedia() {
-  log('\n── Optimising media for the web ──────────────')
+  log('\n── Building web media ────────────────────────')
   const sharp = (await import('sharp')).default
+  await fs.mkdir(MEDIA_DIR, { recursive: true })
 
-  const files = (await fs.readdir(MEDIA_DIR)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
+  const files = (await fs.readdir(MEDIA_SRC).catch(() => [])).filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
   const rename = new Map()
+  const produced = new Set()
   let before = 0
   let after = 0
-  let converted = 0
+  let built = 0
+  let cached = 0
 
   // The library holds both a 3.png and a 3.jpg — different images entirely.
-  // Converting PNG to JPEG would have them fight over the same name and one
-  // would silently overwrite the other, so every output name is claimed first.
-  const claimed = new Set(files.map((f) => f.toLowerCase()))
+  // Converting PNG to JPEG would have them fight over one name and silently
+  // overwrite each other, so every output name is claimed before it is used.
+  const claimed = new Set()
 
   for (const file of files) {
-    const src = path.join(MEDIA_DIR, file)
+    const src = path.join(MEDIA_SRC, file)
     const stat = await fs.stat(src)
     before += stat.size
 
@@ -244,7 +270,7 @@ async function optimiseWebMedia() {
     const ext = isPlan ? 'png' : 'jpg'
 
     let outName = `${base}.${ext}`
-    if (outName !== file && claimed.has(outName.toLowerCase())) {
+    if (claimed.has(outName.toLowerCase())) {
       // Keep the source extension in the name so the two stay distinguishable.
       const srcExt = file.split('.').pop().toLowerCase()
       outName = `${base}-${srcExt}.${ext}`
@@ -252,41 +278,53 @@ async function optimiseWebMedia() {
       while (claimed.has(outName.toLowerCase())) outName = `${base}-${srcExt}-${n++}.${ext}`
     }
     claimed.add(outName.toLowerCase())
+
     const out = path.join(MEDIA_DIR, outName)
+    produced.add(outName)
+    if (outName !== file) rename.set(`/media/${file}`, `/media/${outName}`)
+
+    // Already built and newer than its source — nothing to do.
+    const existing = await fs.stat(out).catch(() => null)
+    if (existing && existing.mtimeMs >= stat.mtimeMs) {
+      after += existing.size
+      cached++
+      continue
+    }
+
     const tmp = path.join(MEDIA_DIR, `.tmp-${outName}`)
-
     try {
-      const pipeline = sharp(src).rotate().resize({ width: 2000, withoutEnlargement: true })
-      if (isPlan) {
-        await pipeline.png({ compressionLevel: 9, palette: true }).toFile(tmp)
-      } else {
-        await pipeline.flatten({ background: '#ffffff' }).jpeg({ quality: 82, mozjpeg: true }).toFile(tmp)
-      }
+      const p = sharp(src).rotate().resize({ width: 2000, withoutEnlargement: true })
+      if (isPlan) await p.png({ compressionLevel: 9, palette: true }).toFile(tmp)
+      else await p.flatten({ background: '#ffffff' }).jpeg({ quality: 82, mozjpeg: true }).toFile(tmp)
 
-      // Only keep the new file if it is actually smaller — a small JPEG source
-      // re-encoded can come out larger, and there is no sense in that trade.
+      // A small JPEG source re-encoded can come out larger; keep the smaller one.
       const tmpStat = await fs.stat(tmp)
       if (tmpStat.size < stat.size) {
-        if (outName !== file) await fs.rm(src)
         await fs.rename(tmp, out)
         after += tmpStat.size
-        if (outName !== file) {
-          rename.set(`/media/${file}`, `/media/${outName}`)
-          converted++
-        }
       } else {
         await fs.rm(tmp)
+        await fs.copyFile(src, out)
         after += stat.size
       }
+      built++
     } catch (err) {
       log(`  ! ${file} — ${err.message}`)
       await fs.rm(tmp).catch(() => {})
-      after += stat.size
+    }
+  }
+
+  // Anything left over is from an earlier naming scheme and no longer referenced.
+  let pruned = 0
+  for (const f of await fs.readdir(MEDIA_DIR).catch(() => [])) {
+    if (!produced.has(f)) {
+      await fs.rm(path.join(MEDIA_DIR, f)).catch(() => {})
+      pruned++
     }
   }
 
   const mb = (n) => (n / 1048576).toFixed(0)
-  log(`  ${files.length} images · ${converted} re-encoded to JPEG — ${mb(before)} MB → ${mb(after)} MB`)
+  log(`  ${files.length} sources · ${built} built, ${cached} cached${pruned ? `, ${pruned} pruned` : ''} — ${mb(before)} MB → ${mb(after)} MB published`)
   return rename
 }
 
@@ -338,7 +376,7 @@ async function migrateContent(kind, entries) {
     const downloaded = []
     for (const url of page.images) {
       if (chrome.has(fileOf(url))) continue
-      const dest = path.join(MEDIA_DIR, url.split('/').pop())
+      const dest = path.join(MEDIA_SRC, url.split('/').pop())
       const r = await download(url, dest)
       if (r.ok || r.skipped) downloaded.push(localPath(url))
       else log(`      ! ${url.split('/').pop()} — ${r.error}`)

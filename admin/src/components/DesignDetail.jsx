@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Trash2, ExternalLink } from 'lucide-react'
 import { useStore } from '../store/useStore.jsx'
 import { PageHeader, Field, Badge, Modal } from './ui.jsx'
-import { slugify } from '../lib/utils.js'
+import { slugify, mediaUrl } from '../lib/utils.js'
 
 const SITE = import.meta.env.VITE_PUBLIC_SITE_URL || 'https://6homes.com'
 
@@ -190,7 +190,7 @@ export default function DesignDetail() {
 
           {form.heroImage && (
             <div className="card overflow-hidden">
-              <img src={form.heroImage} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={mediaUrl(form.heroImage)} alt="" className="aspect-[4/3] w-full object-cover" />
               <div className="px-4 py-2 text-[11px] text-mute">Hero preview</div>
             </div>
           )}

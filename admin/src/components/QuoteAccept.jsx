@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Check, X } from 'lucide-react'
 import { PublicShell, PublicCard, PublicMessage } from './PublicShell.jsx'
-import { fmtDate, fmtMoney } from '../lib/utils.js'
+import { fmtDate, fmtMoney, mediaUrl } from '../lib/utils.js'
 import { lineTotal } from '../lib/quoteMath.js'
 
 // The customer-facing quote page. Authenticates by the token in the URL — no
@@ -139,7 +139,7 @@ export default function QuoteAccept() {
 
         {q.design && (
           <div className="mt-6 overflow-hidden rounded-lg border border-hair">
-            {q.design.heroImage && <img src={q.design.heroImage} alt={q.design.name} className="aspect-[16/9] w-full object-cover" />}
+            {q.design.heroImage && <img src={mediaUrl(q.design.heroImage)} alt={q.design.name} className="aspect-[16/9] w-full object-cover" />}
             <div className="px-5 py-4">
               <div className="font-medium text-navy">{q.design.name}</div>
               <div className="mt-0.5 text-xs tracking-wide text-mute uppercase">

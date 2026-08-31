@@ -4,7 +4,7 @@ import { ArrowLeft, Download, Send, Plus, Trash2, Copy, PenLine } from 'lucide-r
 import { useStore } from '../store/useStore.jsx'
 import { apiPost } from '../lib/apiFetch.js'
 import { PageHeader, Field, Badge, Modal } from './ui.jsx'
-import { fmtDate, fmtDateTime, fmtMoney, newId } from '../lib/utils.js'
+import { fmtDate, fmtDateTime, fmtMoney, newId, mediaUrl } from '../lib/utils.js'
 import { quoteTotals, quoteState, lineTotal } from '../lib/quoteMath.js'
 import SignatureCanvas from './SignatureCanvas.jsx'
 
@@ -210,7 +210,7 @@ export default function QuoteDetail() {
               <input type="date" className="field" disabled={locked}
                 value={form.validUntil ?? ''} onChange={(e) => set({ validUntil: e.target.value })} />
             </Field>
-            {design?.heroImage && <img src={design.heroImage} alt={design.name} className="w-full rounded-md object-cover" />}
+            {design?.heroImage && <img src={mediaUrl(design.heroImage)} alt={design.name} className="w-full rounded-md object-cover" />}
           </div>
 
           <div className="card p-5">

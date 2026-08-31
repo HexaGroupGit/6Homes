@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Home, Plus } from 'lucide-react'
 import { useStore } from '../store/useStore.jsx'
 import { PageHeader, EmptyState, Badge } from './ui.jsx'
-import { fmtMoney, newId, slugify } from '../lib/utils.js'
+import { fmtMoney, newId, slugify, mediaUrl } from '../lib/utils.js'
 
 export default function Designs() {
   const { designs, create } = useStore()
@@ -59,7 +59,7 @@ export default function Designs() {
               <Link key={d.id} to={`/designs/${d.id}`} className="card overflow-hidden transition-colors hover:border-brand-400">
                 <div className="aspect-[4/3] bg-brand-100">
                   {d.heroImage ? (
-                    <img src={d.heroImage} alt={d.name} className="size-full object-cover" loading="lazy" />
+                    <img src={mediaUrl(d.heroImage)} alt={d.name} className="size-full object-cover" loading="lazy" />
                   ) : (
                     <div className="grid size-full place-items-center text-xs text-mute">No image</div>
                   )}

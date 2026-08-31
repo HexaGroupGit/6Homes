@@ -52,11 +52,11 @@ export function resolveIntent(raw) {
 const DEFAULT_DOWNLOADS = {
   brochure:   { filename: '6Homes-Brochure.pdf',   url: `${SITE}/downloads/6homes-brochure.pdf` },
   pricelist:  { filename: '6Homes-Price-List.pdf', url: `${SITE}/downloads/6homes-price-list.pdf` },
-  // Commercial enquiries get the brochure. The Factory Introduction is the more
-  // apt document for a developer, but at 14 MB it bounces on plenty of corporate
-  // mail gateways — it is hosted at /downloads/6homes-factory-introduction.pdf
-  // for the team to link instead.
-  commercial: { filename: '6Homes-Brochure.pdf',   url: `${SITE}/downloads/6homes-brochure.pdf` },
+  // A developer asking about 20 units does not want a retail brochure full of
+  // single-home floorplans. The Factory Introduction is the apt document, and
+  // the rebuild took it from 14 MB — which bounced on corporate mail gateways —
+  // down to under 1 MB, so it now attaches cleanly.
+  commercial: { filename: '6Homes-Factory-Introduction.pdf', url: `${SITE}/downloads/6homes-factory-introduction.pdf` },
 }
 
 // Gmail and Outlook accept ~20–25 MB, but corporate gateways routinely cap at

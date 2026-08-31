@@ -69,9 +69,9 @@ PUBLIC_SITE_URL                  https://6homes.com
 ADMIN_URL                        https://admin.6homes.com
 ```
 
-`PUBLIC_SITE_URL` is where the brochure and price-list emails fetch their
-attachments, so it must point at a deployed site. While the website is still on
-a preview URL, set it to that preview rather than the production domain.
+`PUBLIC_SITE_URL` is where the brochure, price-list and commercial emails fetch
+their attachments, so it must point at a deployed site. While the website is
+still on a preview URL, set it to that preview rather than the production domain.
 
 `CRON_SECRET` is what makes the three cron endpoints refuse anonymous callers.
 Without it they still run, but anyone who finds the URL can trigger them.
@@ -162,7 +162,7 @@ Everything else lives in the admin under Settings → Emails:
 
 ### 5. Attachments
 
-The brochure and price-list emails fetch their PDFs from
+The brochure, price-list and commercial emails fetch their PDFs from
 `PUBLIC_SITE_URL/downloads/`, so the site must be deployed before those send
 correctly. While staging, point `PUBLIC_SITE_URL` at the Vercel preview URL.
 
@@ -170,6 +170,10 @@ Anything over **8 MB** is refused before it reaches Resend and the email sends
 without it — corporate gateways reject large attachments silently, so this fails
 loudly in the log instead. Link to the bigger documents; they are all hosted in
 `site/public/downloads/`.
+
+The brochure is the one to watch: at 6.8 MB it sits at 84% of that ceiling, so a
+few more designs will push it over and it will silently stop attaching. Tighten
+the downscaling in `prepareImages` or switch it to a hosted link before then.
 
 ## What runs automatically
 
@@ -280,11 +284,11 @@ npm run brochures -- --html       # keep the HTML, to debug a page
 
 | Document | Pages | Size | Attached to |
 | --- | --- | --- | --- |
-| Brochure | 18 | 6.8 MB | Brochure, domestic and commercial replies |
+| Brochure | 18 | 6.8 MB | Brochure and domestic replies |
 | Information and Price Guide | 18 | 5.9 MB | Price-list replies |
 | Look Book | 20 | 4.7 MB | Hosted |
 | Product Guide | 20 | 5.9 MB | Hosted |
-| Factory Introduction | 12 | 0.5 MB | Hosted — was 14 MB, now emailable |
+| Factory Introduction | 12 | 0.5 MB | Commercial replies — was 14 MB, now emailable |
 
 Content comes from Supabase when credentials are present, otherwise from the
 migration output — the same order the website uses, so a brochure never
@@ -307,13 +311,13 @@ and `Documents/6HOMEs/`) into `site/public/downloads/`:
 
 | File | Used for |
 | --- | --- |
-| `6homes-brochure.pdf` | Brochure, domestic and commercial replies (1.5 MB) |
-| `6homes-price-list.pdf` | Price-list replies — the Information and Price Guide (3.4 MB) |
-| `6homes-factory-introduction.pdf` | Hosted only (0.5 MB after rebuild) |
+| `6homes-brochure.pdf` | Brochure and domestic replies (6.8 MB) |
+| `6homes-price-list.pdf` | Price-list replies — the Information and Price Guide (5.9 MB) |
+| `6homes-factory-introduction.pdf` | Commercial replies (0.6 MB after rebuild) |
 | `6homes-product-guide.pdf` | Hosted only (5.9 MB) |
 | `6homes-look-book.pdf` | Hosted only (4.7 MB) |
-| `6homes-inclusions.pdf` | Hosted only |
-| `6homes-terms-of-sale.pdf` | Reference for the contract template |
+| `6homes-inclusions.pdf` | Hosted only (0.3 MB) |
+| `6homes-terms-of-sale.pdf` | Reference for the contract template (0.4 MB) |
 
 **`6Homes Modular Price List (Wholesale).pdf` is deliberately excluded.** It
 lists 17 internal model codes and container module bases, and must never reach a

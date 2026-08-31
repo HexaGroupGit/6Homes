@@ -45,3 +45,20 @@ export const initials = (name) =>
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join('') || '?'
+
+/**
+ * Resolve an image path for display in the CRM.
+ *
+ * Design and project photography lives in the website's public folder and is
+ * stored as a root-relative path like /media/selina.jpg. The admin is served
+ * from its own origin, so that path resolves against the admin and 404s — every
+ * photo in the CRM was a broken image. Prefix it with the site origin instead.
+ *
+ * Absolute URLs (Supabase Storage, or anything already hosted) pass through.
+ */
+export function mediaUrl(src) {
+  if (!src) return ''
+  if (/^(https?:)?\/\//.test(src) || src.startsWith('data:')) return src
+  const base = (import.meta.env.VITE_PUBLIC_SITE_URL || '').replace(/\/+$/, '')
+  return base ? `${base}${src.startsWith('/') ? '' : '/'}${src}` : src
+}

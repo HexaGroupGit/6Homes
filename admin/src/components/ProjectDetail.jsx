@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Send, CircleDot, Circle } from 'lucide-react'
 import { useStore } from '../store/useStore.jsx'
 import { apiPost } from '../lib/apiFetch.js'
 import { PageHeader, Field, Badge } from './ui.jsx'
-import { fmtDate, fmtDateTime } from '../lib/utils.js'
+import { fmtDate, fmtDateTime, mediaUrl } from '../lib/utils.js'
 import { BUILD_STAGES, stageIndex, isFinalStage } from '../lib/projectStages.js'
 
 export default function ProjectDetail() {
@@ -198,7 +198,7 @@ export default function ProjectDetail() {
 
           {design && (
             <div className="card overflow-hidden">
-              {design.heroImage && <img src={design.heroImage} alt={design.name} className="aspect-[4/3] w-full object-cover" />}
+              {design.heroImage && <img src={mediaUrl(design.heroImage)} alt={design.name} className="aspect-[4/3] w-full object-cover" />}
               <div className="p-4">
                 <div className="text-xs tracking-wide text-mute uppercase">Design</div>
                 <Link to={`/designs/${design.id}`} className="text-sm font-medium text-brand-600 hover:underline">

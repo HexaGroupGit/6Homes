@@ -66,9 +66,12 @@ export async function POST(req: NextRequest) {
 
     if (r.ok) return NextResponse.json({ success: true })
 
-    // A 4xx is the CRM telling us the submission itself is wrong — pass that
-    // back rather than papering over it with the fallback.
-    if (r.status >= 400 && r.status < 500) {
+    // Only 400 and 422 mean "this submission is wrong" — those are worth showing
+    // the visitor, because they can fix them. Every other status is the endpoint
+    // being missing, unauthorised, rate-limited or broken, which is our problem
+    // and not theirs: fall through and capture the lead rather than turning an
+    // infrastructure fault into a lost customer.
+    if (r.status === 400 || r.status === 422) {
       const detail = await r.json().catch(() => ({}))
       return NextResponse.json({ error: detail?.error || 'We couldn’t accept that enquiry.' }, { status: r.status })
     }
