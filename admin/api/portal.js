@@ -113,7 +113,10 @@ async function projectsFor(sb, email) {
  * accident the first time anyone stores a margin or a supplier note.
  */
 function clientView(project, { design, customer } = {}) {
-  const current = stageIndex(project.stage)
+  // A build with no stage set has not started — treat it as sitting before the
+  // first step rather than letting stageIndex's -1 leak out as "Stage 0 of 6".
+  const started = !!project.stage && stageIndex(project.stage) >= 0
+  const current = started ? stageIndex(project.stage) : 0
 
   return {
     id: project.id,
@@ -129,8 +132,9 @@ function clientView(project, { design, customer } = {}) {
       design?.areaSqm && `${design.areaSqm} m²`,
     ].filter(Boolean).join(' · '),
     customerName: customer?.name ?? '',
-    stage: project.stage ?? BUILD_STAGES[0].id,
+    stage: started ? project.stage : BUILD_STAGES[0].id,
     stageIndex: current,
+    started,
     completedAt: project.completedAt ?? null,
     stageHistory: project.stageHistory ?? [],
     // Dates and the note we write for the customer. `notes` is already sent to
@@ -142,7 +146,7 @@ function clientView(project, { design, customer } = {}) {
         id: s.id,
         name: s.name,
         blurb: s.blurb,
-        state: i < current ? 'done' : i === current ? 'current' : 'todo',
+        state: !started ? 'todo' : i < current ? 'done' : i === current ? 'current' : 'todo',
         // A date on a stage they haven't reached is a plan, not a promise —
         // and a slipped plan in a customer's inbox is a complaint. Only show
         // dates once the stage is live.

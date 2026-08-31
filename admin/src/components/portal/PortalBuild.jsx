@@ -48,7 +48,11 @@ export default function PortalBuild({ build, email, onRefresh, others = [], onSw
 
           <div className="mt-10 sm:mt-14">
             <p className="font-mono text-[11px] tracking-[0.16em] text-brand-200 uppercase">
-              {build.completedAt ? 'Handed over' : `Stage ${build.stageIndex + 1} of ${build.stages.length}`}
+              {build.completedAt
+                ? 'Handed over'
+                : build.started === false
+                  ? 'Getting started'
+                  : `Stage ${build.stageIndex + 1} of ${build.stages.length}`}
             </p>
             <h1 className="mt-3 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">{build.name}</h1>
             <p className="mt-2 text-sm text-white/55">
@@ -127,8 +131,17 @@ export default function PortalBuild({ build, email, onRefresh, others = [], onSw
         {/* ── Where the build is ─────────────────────────────────────────── */}
         <Block
           label="Progress"
-          title={build.completedAt ? 'Your home is handed over' : current?.name}
-          intro={build.completedAt ? `Completed ${fmtDate(build.completedAt)}.` : current?.blurb}
+          title={
+            build.completedAt ? 'Your home is handed over'
+              : build.started === false ? 'Your build is being set up'
+                : current?.name
+          }
+          intro={
+            build.completedAt ? `Completed ${fmtDate(build.completedAt)}.`
+              : build.started === false
+                ? 'Your consultant is putting the details together. Here is what the six steps look like.'
+                : current?.blurb
+          }
         >
           <ol className="border-t border-hair">
             {build.stages.map((s, i) => (
