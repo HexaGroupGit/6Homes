@@ -3,7 +3,7 @@
 // email the customer confirming both parties have signed.
 //
 // Body: { contractId, signerName, signatureData }
-import { requireAdmin } from './_auth.js'
+import { requireFullAdmin } from './_auth.js'
 import { applyCors, methodNotAllowed } from './_cors.js'
 import { sendEmail } from './_email.js'
 import { contractSignedEmail } from './_contract.js'
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (applyCors(req, res, 'POST, OPTIONS')) return
   if (req.method !== 'POST') return methodNotAllowed(res, 'POST')
 
-  const gate = await requireAdmin(req)
+  const gate = await requireFullAdmin(req)
   if (gate.error) return res.status(gate.status).json({ error: gate.error })
   const sb = gate.sb
 

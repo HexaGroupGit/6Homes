@@ -9,7 +9,7 @@
 // Read-only: it renders and returns, and never touches `templates` or sends
 // anything. The safe-mode fields come back so the screen can show the subject
 // line the way it will really arrive while safe mode is on.
-import { requireAdmin } from './_auth.js'
+import { requireFullAdmin } from './_auth.js'
 import { applyCors, methodNotAllowed } from './_cors.js'
 import { renderPreview } from './_preview.js'
 import { DEFAULT_SAFE_RECIPIENT } from './_email.js'
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   if (applyCors(req, res, 'POST, OPTIONS')) return
   if (req.method !== 'POST') return methodNotAllowed(res, 'POST')
 
-  const gate = await requireAdmin(req)
+  const gate = await requireFullAdmin(req)
   if (gate.error) return res.status(gate.status).json({ error: gate.error })
   const sb = gate.sb
 

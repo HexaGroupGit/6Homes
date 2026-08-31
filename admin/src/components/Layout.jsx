@@ -5,6 +5,7 @@ import {
 import { signOut } from '../lib/auth.js'
 import { useStore } from '../store/useStore.jsx'
 import { cn, initials } from '../lib/utils.js'
+import { visibleNav, roleMeta, isFullAdmin } from '../lib/roles.js'
 
 const NAV = [
   { to: '/', end: true, label: 'Dashboard', icon: LayoutDashboard },
@@ -36,6 +37,7 @@ function SafeModeBanner({ settings }) {
 
 export default function Layout({ admin }) {
   const { settings, loading, error } = useStore()
+  const full = isFullAdmin(admin)
 
   return (
     <div className="flex min-h-screen">
@@ -49,7 +51,7 @@ export default function Layout({ admin }) {
         </div>
 
         <nav className="flex-1 space-y-0.5 px-3">
-          {NAV.map(({ to, end, label, icon: Icon }) => (
+          {visibleNav(admin, NAV).map(({ to, end, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -74,7 +76,11 @@ export default function Layout({ admin }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-medium">{admin?.name || 'Admin'}</div>
-              <div className="truncate text-[11px] text-mute">{admin?.email}</div>
+              {/* Say which role, so a restricted account knows the missing nav
+                  items are a setting rather than something broken. */}
+              <div className="truncate text-[11px] text-mute" title={admin?.email}>
+                {full ? admin?.email : roleMeta(admin?.role).label}
+              </div>
             </div>
           </div>
           <button onClick={signOut} className="btn-ghost mt-1 w-full justify-start text-xs">
@@ -84,7 +90,7 @@ export default function Layout({ admin }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <SafeModeBanner settings={settings} />
+        {full && <SafeModeBanner settings={settings} />}
         {error && (
           <div className="border-b border-red-200 bg-red-50 px-5 py-2 text-[13px] text-red-800">
             Couldn't load data: {error}

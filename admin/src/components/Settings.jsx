@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { ShieldAlert, ShieldCheck } from 'lucide-react'
 import { useStore } from '../store/useStore.jsx'
 import { PageHeader, Field, Badge, Modal } from './ui.jsx'
+import Team from './Team.jsx'
 
 const linesToArray = (s) => s.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)
 const arrayToLines = (a) => (a ?? []).join('\n')
 
-export default function Settings() {
+export default function Settings({ admin }) {
   const { settings, saveSettings } = useStore()
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -223,6 +224,9 @@ export default function Settings() {
             <input className="field" value={form.company.showroom ?? ''} onChange={(e) => setCompany({ showroom: e.target.value })} />
           </Field>
         </section>
+
+        {/* ── Team ──────────────────────────────────────────────────────── */}
+        <Team admin={admin} />
       </div>
 
       <Modal open={goLiveOpen} onClose={() => { setGoLiveOpen(false); setConfirmText('') }} title="Send email to real customers?">

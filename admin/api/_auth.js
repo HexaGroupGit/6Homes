@@ -39,13 +39,41 @@ export async function isAdminEmail(sb, email) {
   return !!data
 }
 
-// Gate: a verified admin. Returns { sb, user } or { error, status }.
+/**
+ * The caller's staff role, or null if they aren't staff.
+ * A row with no role predates roles existing and means full access — the same
+ * thing every row meant before, so a migration never silently demotes anyone.
+ */
+export async function adminRole(sb, email) {
+  const { data } = await sb.from('admins').select('email, role').ilike('email', email).maybeSingle()
+  return data ? (data.role ?? 'admin') : null
+}
+
+// Gate: any verified staff member. Returns { sb, user, role } or { error, status }.
 export async function requireAdmin(req) {
   const sb = serviceClient()
   const user = await verifiedUser(req, sb)
   if (!user) return { error: 'Sign in required.', status: 401 }
-  if (!(await isAdminEmail(sb, user.email))) return { error: 'Admin access required.', status: 403 }
-  return { sb, user }
+  const role = await adminRole(sb, user.email)
+  if (!role) return { error: 'Admin access required.', status: 403 }
+  return { sb, user, role }
+}
+
+/**
+ * Gate: staff with full access — everything except the `projects` role.
+ *
+ * RLS already stops a projects-only account reading leads or quotes, but these
+ * functions run with the service role and bypass RLS entirely. Without this
+ * check a restricted account could do through the API exactly what the database
+ * refuses it directly, which would make the whole role pointless.
+ */
+export async function requireFullAdmin(req) {
+  const gate = await requireAdmin(req)
+  if (gate.error) return gate
+  if (gate.role === 'projects') {
+    return { error: 'This needs full admin access.', status: 403 }
+  }
+  return gate
 }
 
 // Gate: a Vercel cron invocation. Vercel adds `Authorization: Bearer $CRON_SECRET`

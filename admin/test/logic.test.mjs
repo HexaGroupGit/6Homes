@@ -21,6 +21,7 @@ import {
   canAccessProject, clientEmails, fileRejectionReason, projectPrefix, safeFileName,
   outstanding, byStage, DOC_LIBRARY, APPROVAL_LIBRARY, MAX_FILE_BYTES,
 } from '../src/lib/portal.js'
+import { ROLES, isFullAdmin, canManageStaff, canOpen, homePath, visibleNav } from '../src/lib/roles.js'
 
 // ── GST and totals ──────────────────────────────────────────────────────────
 // Australian consumer pricing: line prices are GST-INCLUSIVE, so GST is backed
@@ -385,4 +386,74 @@ test('every document and approval in the library names a real build stage', () =
       assert.ok((item.note ?? item.body ?? '').trim(), `"${item.label}" needs to explain itself to the customer`)
     }
   }
+})
+
+// ── Staff roles ─────────────────────────────────────────────────────────────
+// The browser half of the role check. The database (sql/6homes-roles.sql) and
+// api/_auth.js are the real boundary; these pin the rules the UI follows so the
+// two cannot drift without a test failing.
+
+test('owner and admin are full access, projects is not', () => {
+  assert.equal(isFullAdmin({ role: 'owner' }), true)
+  assert.equal(isFullAdmin({ role: 'admin' }), true)
+  assert.equal(isFullAdmin({ role: 'projects' }), false)
+})
+
+test('an account with no role keeps full access', () => {
+  // Every row meant full access before roles existed. A migration that quietly
+  // demoted the people already using the system would be a worse bug than the
+  // one it fixed.
+  assert.equal(isFullAdmin({}), true)
+  assert.equal(isFullAdmin({ role: null }), true)
+  assert.equal(isFullAdmin({ role: 'nonsense' }), true)
+})
+
+test('only an owner manages staff', () => {
+  assert.equal(canManageStaff({ role: 'owner' }), true)
+  assert.equal(canManageStaff({ role: 'admin' }), false)
+  assert.equal(canManageStaff({ role: 'projects' }), false)
+  assert.equal(canManageStaff(null), false)
+})
+
+test('a projects account reaches builds and designs, and nothing else', () => {
+  const wayne = { role: 'projects' }
+  for (const open of ['/projects', '/projects/proj_x', '/designs', '/designs/d_1']) {
+    assert.equal(canOpen(wayne, open), true, `${open} should be open`)
+  }
+  for (const shut of ['/', '/leads', '/leads/l_1', '/quotes', '/quotes/q_1', '/templates', '/email-log', '/settings']) {
+    assert.equal(canOpen(wayne, shut), false, `${shut} should be closed`)
+  }
+})
+
+test('a route prefix cannot be widened by a lookalike path', () => {
+  const wayne = { role: 'projects' }
+  // /projects must not open /projects-secret or /projectsomething.
+  assert.equal(canOpen(wayne, '/projects-secret'), false)
+  assert.equal(canOpen(wayne, '/designsomething'), false)
+  assert.equal(canOpen(wayne, '/leads/../projects'), false)
+})
+
+test('a full admin can open everything', () => {
+  for (const path of ['/', '/leads', '/quotes', '/templates', '/email-log', '/settings', '/projects', '/designs']) {
+    assert.equal(canOpen({ role: 'admin' }, path), true)
+    assert.equal(canOpen({ role: 'owner' }, path), true)
+  }
+})
+
+test('each role lands somewhere it is allowed to be', () => {
+  for (const role of Object.keys(ROLES)) {
+    const who = { role }
+    assert.equal(canOpen(who, homePath(who)), true, `${role} cannot open its own home path`)
+  }
+})
+
+test('the sidebar only offers what the role can open', () => {
+  const NAV = [
+    { to: '/', label: 'Dashboard' }, { to: '/leads', label: 'Leads' },
+    { to: '/designs', label: 'Designs' }, { to: '/projects', label: 'Projects' },
+    { to: '/quotes', label: 'Quotes' }, { to: '/templates', label: 'Email templates' },
+    { to: '/email-log', label: 'Email log' }, { to: '/settings', label: 'Settings' },
+  ]
+  assert.deepEqual(visibleNav({ role: 'projects' }, NAV).map((n) => n.label), ['Designs', 'Projects'])
+  assert.equal(visibleNav({ role: 'admin' }, NAV).length, NAV.length)
 })

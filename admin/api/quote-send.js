@@ -5,7 +5,7 @@
 // Body: { quoteId, pdfBase64? }
 // The PDF is generated in the browser (src/lib/quotePdf.js) and posted up, so the
 // customer's attachment is byte-for-byte the file the admin previewed.
-import { requireAdmin } from './_auth.js'
+import { requireFullAdmin } from './_auth.js'
 import { applyCors, methodNotAllowed } from './_cors.js'
 import { sendEmail } from './_email.js'
 import { newToken, quoteEmail, quoteUrl } from './_quote.js'
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (applyCors(req, res, 'POST, OPTIONS')) return
   if (req.method !== 'POST') return methodNotAllowed(res, 'POST')
 
-  const gate = await requireAdmin(req)
+  const gate = await requireFullAdmin(req)
   if (gate.error) return res.status(gate.status).json({ error: gate.error })
   const sb = gate.sb
 

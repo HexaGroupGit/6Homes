@@ -98,7 +98,7 @@ async function logEmail(entry) {
  * Returns { ok, skipped?, reason?, status?, data? }.
  */
 export async function sendEmail(payload = {}) {
-  const { leadId, customerId, projectId, emailType, ...mail } = payload
+  const { leadId, customerId, projectId, emailType, internal, ...mail } = payload
   const tag = { leadId, customerId, projectId, emailType }
 
   const apiKey = process.env.RESEND_API_KEY
@@ -130,7 +130,18 @@ export async function sendEmail(payload = {}) {
 
   const intendedTo = [...toList]
 
-  if (safe.mode) {
+  // `internal: true` opts a send out of the safe-mode redirect.
+  //
+  // Safe mode exists to stop a CUSTOMER hearing from us before launch. A staff
+  // invitation is the opposite case: an admin has deliberately typed a
+  // colleague's address, and redirecting it to a test inbox means the person
+  // never gets in — which would leave the team unable to onboard anyone for the
+  // whole pre-launch period.
+  //
+  // Use this ONLY for mail addressed to our own people by an explicit action.
+  // Anything a customer could receive must go through the redirect, and the log
+  // records which path each send took.
+  if (safe.mode && !internal) {
     // Redirect everything to the single safe recipient; strip cc/bcc so nobody
     // else is copied, and flag the subject so it's obviously a test send.
     const orig = intendedTo.join(', ')
@@ -162,7 +173,8 @@ export async function sendEmail(payload = {}) {
       subject: mail.subject,
       status: res.ok ? 'sent' : 'failed',
       safeMode: safe.mode,
-      redirectedTo: safe.mode ? safe.to : undefined,
+      internal: internal || undefined,
+      redirectedTo: safe.mode && !internal ? safe.to : undefined,
       providerId: data?.id,
       error: res.ok ? undefined : JSON.stringify(data ?? {}).slice(0, 500),
     })

@@ -22,6 +22,7 @@ import SignPage from './components/SignPage.jsx'
 import PortalApp from './components/portal/PortalApp.jsx'
 import PortalLogin from './components/portal/PortalLogin.jsx'
 import SetPassword from './components/SetPassword.jsx'
+import { canOpen, homePath } from './lib/roles.js'
 
 function NotConfigured() {
   return (
@@ -126,21 +127,30 @@ function AdminArea({ session, admin, checking }) {
     <StoreProvider>
       <Routes>
         <Route path="/" element={<Layout admin={admin} />}>
-          <Route index element={<Dashboard />} />
-          <Route path="leads" element={<LeadsBoard />} />
-          <Route path="leads/:id" element={<LeadDetail />} />
-          <Route path="designs" element={<Designs />} />
-          <Route path="designs/:id" element={<DesignDetail />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="projects/:id" element={<ProjectDetail />} />
-          <Route path="quotes" element={<Quotes />} />
-          <Route path="quotes/:id" element={<QuoteDetail />} />
-          <Route path="templates" element={<Templates />} />
-          <Route path="email-log" element={<EmailLog />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Wrapped rather than omitted: a restricted account that types a URL
+              gets sent home instead of a blank screen, and the guard lives in
+              one place rather than being repeated per route. */}
+          <Route index element={<Allowed admin={admin} path="/"><Dashboard /></Allowed>} />
+          <Route path="leads" element={<Allowed admin={admin} path="/leads"><LeadsBoard /></Allowed>} />
+          <Route path="leads/:id" element={<Allowed admin={admin} path="/leads"><LeadDetail /></Allowed>} />
+          <Route path="designs" element={<Allowed admin={admin} path="/designs"><Designs /></Allowed>} />
+          <Route path="designs/:id" element={<Allowed admin={admin} path="/designs"><DesignDetail /></Allowed>} />
+          <Route path="projects" element={<Allowed admin={admin} path="/projects"><Projects /></Allowed>} />
+          <Route path="projects/:id" element={<Allowed admin={admin} path="/projects"><ProjectDetail /></Allowed>} />
+          <Route path="quotes" element={<Allowed admin={admin} path="/quotes"><Quotes /></Allowed>} />
+          <Route path="quotes/:id" element={<Allowed admin={admin} path="/quotes"><QuoteDetail /></Allowed>} />
+          <Route path="templates" element={<Allowed admin={admin} path="/templates"><Templates /></Allowed>} />
+          <Route path="email-log" element={<Allowed admin={admin} path="/email-log"><EmailLog /></Allowed>} />
+          <Route path="settings" element={<Allowed admin={admin} path="/settings"><Settings admin={admin} /></Allowed>} />
+          <Route path="*" element={<Navigate to={homePath(admin)} replace />} />
         </Route>
       </Routes>
     </StoreProvider>
   )
+}
+
+// The browser-side half of the role check. The database and api/_auth.js are
+// the real boundary — this only decides what is worth rendering.
+function Allowed({ admin, path, children }) {
+  return canOpen(admin, path) ? children : <Navigate to={homePath(admin)} replace />
 }
