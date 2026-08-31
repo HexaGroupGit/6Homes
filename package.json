@@ -13,7 +13,8 @@
     "migrate": "node scripts/migrate-wordpress.mjs",
     "brochures": "node scripts/brochures/index.mjs",
     "logo": "node scripts/split-logo.mjs",
-    "favicon": "node scripts/make-favicon.mjs"
+    "favicon": "node scripts/make-favicon.mjs",
+    "check:media": "node scripts/check-media.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.112.4",

@@ -52,7 +52,7 @@ export default function ProcessPage() {
           the old media library. */}
       <section className="relative mt-16 aspect-[16/9] w-full md:mt-24 md:aspect-[21/9]">
         <Image
-          src="/media/Install-4.png"
+          src="/media/Install-4.jpg"
           alt="A completed 6Homes module being craned onto its footings on site"
           fill
           sizes="100vw"

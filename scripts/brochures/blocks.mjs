@@ -49,9 +49,13 @@ export const page = (inner, { dark = false, panel = false, bare = false, folio =
 export function cover({ image, kicker, title, subtitle, note }) {
   const src = resolveImage(image, 'cover')
   const aspect = imageAspect(image) ?? 16 / 9
-  // Clamped at both ends: a panorama should not thin into a stripe, and a
-  // squarer picture must not push the title block off the foot of the page.
-  const bandH = Math.max(100, Math.min(132, PAGE.w / aspect))
+  // Clamped to a narrow range so every cover in the family shares roughly the
+  // same band depth. A 16:9 photograph lands at 118mm exactly and is not cropped
+  // at all; the 21:9 panorama is cropped at the sides to reach the same depth,
+  // which still leaves 1460px across the page — 176 dpi, against the 72 dpi the
+  // portrait full-bleed used to manage. Letting the panorama keep its own
+  // proportions instead left 73mm of empty ground between photograph and title.
+  const bandH = Math.max(118, Math.min(132, PAGE.w / aspect))
 
   return page(
     `<div class="bleed" style="background:${T.deep}"></div>

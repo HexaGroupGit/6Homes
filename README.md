@@ -171,9 +171,10 @@ without it — corporate gateways reject large attachments silently, so this fai
 loudly in the log instead. Link to the bigger documents; they are all hosted in
 `site/public/downloads/`.
 
-The brochure is the one to watch: at 6.8 MB it sits at 84% of that ceiling, so a
-few more designs will push it over and it will silently stop attaching. Tighten
-the downscaling in `prepareImages` or switch it to a hosted link before then.
+The brochure is the one to watch: at 7.1 MB it sits at 88% of that ceiling, so a
+few more designs will push it over and it will silently stop attaching. Drop the
+default tier in `prepareImages` below 1500px, or switch the brochure to a hosted
+link, before that happens.
 
 ## What runs automatically
 
@@ -284,21 +285,33 @@ npm run brochures -- --html       # keep the HTML, to debug a page
 
 | Document | Pages | Size | Attached to |
 | --- | --- | --- | --- |
-| Brochure | 18 | 6.8 MB | Brochure and domestic replies |
-| Information and Price Guide | 18 | 5.9 MB | Price-list replies |
-| Look Book | 20 | 4.7 MB | Hosted |
-| Product Guide | 20 | 5.9 MB | Hosted |
-| Factory Introduction | 12 | 0.5 MB | Commercial replies — was 14 MB, now emailable |
+| Brochure | 18 | 7.1 MB | Brochure and domestic replies |
+| Information and Price Guide | 18 | 6.0 MB | Price-list replies |
+| Look Book | 20 | 5.0 MB | Hosted |
+| Product Guide | 20 | 6.0 MB | Hosted |
+| Factory Introduction | 12 | 0.7 MB | Commercial replies — was 14 MB, now emailable |
 
 Content comes from Supabase when credentials are present, otherwise from the
 migration output — the same order the website uses, so a brochure never
 disagrees with what is published. Change a price or add a model once and every
 document and the website agree.
 
-Source images are downscaled to print resolution and re-encoded before
-embedding. Without that step the brochure came out at 108 MB and crashed the
-renderer on the longer documents; it is now under 7 MB. Each document renders in
-its own browser instance for the same reason.
+Source images are re-encoded to one of three tiers before embedding. Without
+that step the brochure came out at 108 MB and crashed the renderer on the longer
+documents. Each document renders in its own browser instance for the same reason.
+
+The tier that matters is not an image's pixel width but how many pixels survive
+per millimetre of paper. A cover plate spans the full 210mm page, so 1920px
+across it is 232 dpi. The same file cropped into a portrait full-bleed kept only
+764px of its width — 92 dpi, and 72 dpi once the old flat 1500px cap had been
+applied, which is why the covers looked soft. Covers and full-bleed plates are
+now never downscaled and never cropped against their own aspect ratio;
+floorplans keep full chroma because dimension text is the point of the drawing;
+everything else stays at 1500px.
+
+A page whose content no longer fits its sheet is reported at build time. `.page`
+is `overflow: hidden` by design, so without that check a layout change is
+clipped silently and only discovered in print.
 
 Prices in the guide are the installed prices, held in the CRM. `publishPrice` is
 false on every design, so they appear in the brochures and in quotes but never on
@@ -311,11 +324,11 @@ and `Documents/6HOMEs/`) into `site/public/downloads/`:
 
 | File | Used for |
 | --- | --- |
-| `6homes-brochure.pdf` | Brochure and domestic replies (6.8 MB) |
-| `6homes-price-list.pdf` | Price-list replies — the Information and Price Guide (5.9 MB) |
-| `6homes-factory-introduction.pdf` | Commercial replies (0.6 MB after rebuild) |
-| `6homes-product-guide.pdf` | Hosted only (5.9 MB) |
-| `6homes-look-book.pdf` | Hosted only (4.7 MB) |
+| `6homes-brochure.pdf` | Brochure and domestic replies (7.1 MB) |
+| `6homes-price-list.pdf` | Price-list replies — the Information and Price Guide (6.0 MB) |
+| `6homes-factory-introduction.pdf` | Commercial replies (0.7 MB after rebuild) |
+| `6homes-product-guide.pdf` | Hosted only (6.0 MB) |
+| `6homes-look-book.pdf` | Hosted only (5.0 MB) |
 | `6homes-inclusions.pdf` | Hosted only (0.3 MB) |
 | `6homes-terms-of-sale.pdf` | Reference for the contract template (0.4 MB) |
 

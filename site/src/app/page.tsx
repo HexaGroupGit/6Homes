@@ -8,12 +8,32 @@ import EnquireButton from '@/components/enquiry/EnquireButton'
 
 export const revalidate = 3600
 
-// The Boonah off-grid Selina: a finished home sitting in bushland beside a dam.
-// It carries the whole proposition in one frame — this arrived on a truck.
-const HERO = '/media/Offgrid-7.png'
+// The hero is the Boonah off-grid Selina — a finished home in bushland beside a
+// dam, which carries the whole proposition in one frame.
+//
+// Taken from the project record rather than a hardcoded filename. The migration
+// re-encodes the library and renames files as it goes (Offgrid-7.png became
+// Offgrid-7.jpg), and a hardcoded path silently 404s: next/image returns 400,
+// the page renders a blank column, and nothing complains. Reading it from the
+// data means a rename can never break it.
+const HERO_PROJECT = 'boonah-qld'
 
 export default async function HomePage() {
   const [designs, projects] = await Promise.all([getDesigns(), getProjects()])
+
+  const heroProject = projects.find((p) => p.slug === HERO_PROJECT)
+  // Fall through the data rather than ever rendering an empty column.
+  const hero =
+    heroProject?.heroImage ??
+    projects.find((p) => p.heroImage)?.heroImage ??
+    designs.find((d) => d.heroImage)?.heroImage ??
+    null
+
+  const heroDesign = designs.find((d) => d.name === heroProject?.designName)
+  const heroCaption =
+    [heroProject?.location, heroProject?.designName, heroDesign?.areaSqm ? `${heroDesign.areaSqm} m²` : null]
+      .filter(Boolean)
+      .join(' · ') || 'Australian modular homes'
 
   // One home from each end of the range rather than the first three, so the
   // page shows the spread from studio to family home.
@@ -68,18 +88,20 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="relative min-w-0 min-h-[58svh] lg:min-h-full">
-              <Image
-                src={HERO}
-                alt="A completed 6Homes modular home installed in bushland beside a dam"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 52vw"
-                className="object-cover"
-              />
+            <div className="relative min-w-0 min-h-[58svh] bg-panel lg:min-h-full">
+              {hero && (
+                <Image
+                  src={hero}
+                  alt="A completed 6Homes modular home installed in bushland beside a dam"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 52vw"
+                  className="object-cover"
+                />
+              )}
               {/* The annotation belongs on the plate, not on the title block. */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-6 pt-20 md:p-8 md:pt-24">
-                <Dim tone="light">Boonah, QLD · Selina · 60 m²</Dim>
+                <Dim tone="light">{heroCaption}</Dim>
               </div>
             </div>
           </div>
