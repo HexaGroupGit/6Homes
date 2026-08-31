@@ -7,7 +7,7 @@
     "dev": "concurrently -n site,admin -c cyan,magenta \"npm run dev --prefix site\" \"npm run dev --prefix admin\"",
     "dev:site": "npm run dev --prefix site",
     "dev:admin": "npm run dev --prefix admin",
-    "build": "npm run build --prefix site && npm run build --prefix admin",
+    "build": "node scripts/vercel-guard.mjs && npm run build --prefix site && npm run build --prefix admin",
     "install:all": "npm install --prefix site && npm install --prefix admin",
     "preflight": "node scripts/preflight.mjs",
     "migrate": "node scripts/migrate-wordpress.mjs",

@@ -19,7 +19,62 @@ into a pipeline with automatic acknowledgements, follow-up and build updates.
 | `sql/` | One-shot Supabase setup | — |
 | `scripts/` | WordPress migration and the launch preflight | — |
 
-Two Vercel projects from this one repo, each with its own root directory.
+## Deploying
+
+**Two Vercel projects, from this one repository.** They are separate
+applications and cannot share a deployment — one is a Next.js site, the other a
+Vite SPA plus serverless functions.
+
+The setting that matters is **Root Directory**. Vercel installs dependencies
+from there, so a project pointed at the repo root installs only the root tooling
+and the build dies on `next: command not found`. `npm run build` at the root
+detects Vercel and explains this rather than failing cryptically.
+
+| | Website | Admin |
+| --- | --- | --- |
+| Root Directory | `site` | `admin` |
+| Framework preset | Next.js | Vite |
+| Domain | `6homes.com` | `admin.6homes.com` |
+| Build / output | auto-detected | auto-detected (`dist`) |
+
+Everything else is auto-detected — no build command or install command to
+override. `admin/vercel.json` registers the SPA rewrite and the three daily
+crons, and `admin/api/*.js` become serverless functions automatically.
+
+### Environment variables
+
+Set these in each project's Settings → Environment Variables. They mirror the
+`.env.example` files.
+
+**Website**
+
+```
+NEXT_PUBLIC_SUPABASE_URL         https://<ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY    anon key
+CRM_SUPABASE_SERVICE_KEY         service role key — enquiry fallback only
+SIXHOMES_ADMIN_ENDPOINT          https://admin.6homes.com/api/form-submit
+NEXT_PUBLIC_SITE_URL             https://6homes.com
+```
+
+**Admin**
+
+```
+SUPABASE_URL                     https://<ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY        service role key
+VITE_SUPABASE_URL                https://<ref>.supabase.co
+VITE_SUPABASE_ANON_KEY           anon key
+RESEND_API_KEY                   Resend key
+CRON_SECRET                      any long random string
+PUBLIC_SITE_URL                  https://6homes.com
+ADMIN_URL                        https://admin.6homes.com
+```
+
+`PUBLIC_SITE_URL` is where the brochure and price-list emails fetch their
+attachments, so it must point at a deployed site. While the website is still on
+a preview URL, set it to that preview rather than the production domain.
+
+`CRON_SECRET` is what makes the three cron endpoints refuse anonymous callers.
+Without it they still run, but anyone who finds the URL can trigger them.
 
 ## Getting started
 
