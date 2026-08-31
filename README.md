@@ -245,6 +245,7 @@ groups so a horizontal lockup can be set from the real artwork:
 | `mark.svg` / `mark-white.svg` | The interlocking mark alone |
 | `wordmark.svg` / `wordmark-white.svg` | 6HOMES type alone |
 | `FullLogo.svg` / `FullLogo_White.svg` | The original vertical lockup |
+| `email-logo.png` | Horizontal lockup for the branded emails |
 
 Bounding boxes are measured in a real browser, so each asset crops exactly to
 its own ink. The wordmark carries its fill inside the SVG and cannot inherit
@@ -262,9 +263,19 @@ Colours are taken from the vector, not sampled from a PNG:
 The favicon and app icons are generated from the same mark:
 
 ```bash
-npm run logo      # split the lockup into mark + wordmark
-npm run favicon   # build the icons from the mark
+npm run logo        # split the lockup into mark + wordmark
+npm run logo:email  # compose the horizontal lockup as a PNG for emails
+npm run favicon     # build the icons from the mark
 ```
+
+Email clients strip SVG, so the branded emails cannot use the vectors. `npm run
+logo:email` composes the same two split assets into `site/public/brand/email-logo.png`
+at 2x, declared at half size in the markup so it stays sharp on a retina screen.
+It lands in the *site's* public folder deliberately: an email has no origin to
+resolve a relative path against, so the logo needs an absolute URL on a host that
+serves it publicly, and the admin is behind a login. `npm run preflight` checks
+that URL actually resolves, because a broken logo shows on every send rather than
+on one flow.
 
 The mark on a transparent ground vanishes against a dark browser tab — half its
 gradient is nearly black — so it is set in white on a brand-gradient tile, which

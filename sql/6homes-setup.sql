@@ -132,7 +132,7 @@ insert into settings (id, data) values ('global', jsonb_build_object(
   ),
   'emails', jsonb_build_object(
     'safeMode', true,
-    'safeRecipient', 'melissa@6homes.com',
+    'safeRecipient', 'eric@hexaspace.com.au',
     'fromName', '6Homes',
     'fromEmail', 'noreply@6homes.com',
     'replyTo', 'melissa@6homes.com',

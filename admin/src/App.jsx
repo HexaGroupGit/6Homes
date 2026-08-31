@@ -19,6 +19,8 @@ import EmailLog from './components/EmailLog.jsx'
 import Settings from './components/Settings.jsx'
 import QuoteAccept from './components/QuoteAccept.jsx'
 import SignPage from './components/SignPage.jsx'
+import PortalApp from './components/portal/PortalApp.jsx'
+import PortalLogin from './components/portal/PortalLogin.jsx'
 
 function NotConfigured() {
   return (
@@ -39,6 +41,12 @@ function NotConfigured() {
     </div>
   )
 }
+
+const Loading = () => (
+  <div className="grid min-h-screen place-items-center">
+    <div className="text-sm text-mute">Loading…</div>
+  </div>
+)
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -77,23 +85,36 @@ export default function App() {
         */}
         <Route path="/quote/:token" element={<QuoteAccept />} />
         <Route path="/sign/:token" element={<SignPage />} />
+
+        {/*
+          The client portal. Same domain and same deployment as the CRM, split
+          by role rather than by host: staff land on the board, customers on
+          their build. One login surface each, one place to keep them working.
+        */}
+        <Route path="/portal" element={<PortalArea session={session} checking={checking} />} />
+        <Route path="/portal/:projectId" element={<PortalArea session={session} checking={checking} />} />
+
         <Route path="*" element={<AdminArea session={session} admin={admin} checking={checking} />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
-function AdminArea({ session, admin, checking }) {
-  if (checking) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="text-sm text-mute">Loading…</div>
-      </div>
-    )
-  }
+function PortalArea({ session, checking }) {
+  if (checking) return <Loading />
+  // An admin who follows a portal link sees exactly what the customer sees —
+  // useful, and the API allows it, so there's nothing to special-case.
+  if (!session?.user?.email) return <PortalLogin />
+  return <PortalApp email={session.user.email} />
+}
 
-  // Signed in but not on the allow-list is treated as signed out.
-  if (!session || !admin) return <Login />
+function AdminArea({ session, admin, checking }) {
+  if (checking) return <Loading />
+
+  // Signed in but not on the allow-list is either a portal customer who landed
+  // on the CRM — send them to their build — or someone who shouldn't be here.
+  if (session && !admin) return <Navigate to="/portal" replace />
+  if (!session) return <Login />
 
   return (
     <StoreProvider>

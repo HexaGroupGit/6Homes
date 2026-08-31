@@ -5,6 +5,11 @@ import { BUILD_STAGES } from './projectStages.js'
 // is written but never used — so this list is the contract between the two.
 //
 // `vars` is what the editor offers as insertable placeholders.
+//
+// The client portal's emails are deliberately absent. Each one is assembled
+// from live state — a one-time sign-in link, the exact documents outstanding —
+// so a free-text override would drop the thing the email exists to carry. They
+// are still recorded in the email log like every other send.
 const LEAD_VARS = ['firstName', 'name', 'email', 'phone', 'design', 'company', 'website', 'consultLink', 'showroom']
 const PROJECT_VARS = ['firstName', 'name', 'project', 'design', 'stage', 'company', 'website']
 

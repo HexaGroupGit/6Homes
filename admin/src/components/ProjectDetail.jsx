@@ -4,17 +4,20 @@ import { ArrowLeft, Check, Send, CircleDot, Circle } from 'lucide-react'
 import { useStore } from '../store/useStore.jsx'
 import { apiPost } from '../lib/apiFetch.js'
 import { PageHeader, Field, Badge } from './ui.jsx'
-import { fmtDate, fmtDateTime, mediaUrl } from '../lib/utils.js'
+import { cn, fmtDate, fmtDateTime, mediaUrl } from '../lib/utils.js'
 import { BUILD_STAGES, stageIndex, isFinalStage } from '../lib/projectStages.js'
+import { clientEmails, outstanding } from '../lib/portal.js'
+import ProjectPortal from './ProjectPortal.jsx'
 
 export default function ProjectDetail() {
   const { id } = useParams()
-  const { projects, customers, designs, emailLog, update } = useStore()
+  const { projects, customers, designs, emailLog, update, reload } = useStore()
 
   const project = projects.find((p) => p.id === id)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [tab, setTab] = useState('build')
 
   if (!project) {
     return (
@@ -28,6 +31,10 @@ export default function ProjectDetail() {
   const customer = customers.find((c) => c.id === project.customerId)
   const design = designs.find((d) => d.id === project.designId)
   const current = stageIndex(project.stage)
+  // What the customer still owes us — surfaced on the tab so nobody has to open
+  // the panel to find out whether anything is waiting.
+  const portalPending = outstanding(project).total
+  const portalClients = clientEmails(project)
   const emails = emailLog
     .filter((e) => e.projectId === id)
     .sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt))
@@ -84,6 +91,37 @@ export default function ProjectDetail() {
       {error && <div className="bg-red-50 px-7 py-2 text-sm text-red-700">{error}</div>}
       {notice && <div className="bg-emerald-50 px-7 py-2 text-sm text-emerald-800">{notice}</div>}
 
+      {/* Two audiences for one build: what we're doing, and what the customer
+          sees us doing. Tabs rather than one long page, because the portal panel
+          is only touched when something needs sending or reviewing. */}
+      <div className="flex gap-1 border-b border-hair px-7">
+        {[
+          ['build', 'Build'],
+          ['portal', 'Client portal'],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={cn(
+              '-mb-px border-b-2 px-3 py-2.5 text-sm transition-colors',
+              tab === key ? 'border-brand-500 font-medium text-navy' : 'border-transparent text-mute hover:text-ink'
+            )}
+          >
+            {label}
+            {key === 'portal' && portalPending > 0 && (
+              <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                {portalPending}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'portal' ? (
+        <div className="p-7">
+          <ProjectPortal project={project} onChanged={reload} />
+        </div>
+      ) : (
       <div className="grid gap-6 p-7 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <h2 className="text-xs tracking-wide text-mute uppercase">Build progress</h2>
@@ -189,6 +227,18 @@ export default function ProjectDetail() {
             ) : (
               <p className="text-sm text-mute">No customer linked.</p>
             )}
+            <div className="mt-3 border-t border-hair pt-3 text-xs">
+              {portalClients.length ? (
+                <span className="text-mute">
+                  On the portal: <span className="text-ink">{portalClients.join(', ')}</span>
+                </span>
+              ) : (
+                <button onClick={() => setTab('portal')} className="text-brand-600 hover:underline">
+                  Invite them to the client portal
+                </button>
+              )}
+            </div>
+
             {project.leadId && (
               <Link to={`/leads/${project.leadId}`} className="mt-3 inline-block text-xs text-brand-600 hover:underline">
                 View the original enquiry
@@ -226,6 +276,7 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
+      )}
     </>
   )
 }

@@ -161,6 +161,25 @@ for (const f of ['6homes-brochure.pdf', '6homes-price-list.pdf']) {
   }
 }
 
+// The branded frame loads the logo over the network on every email, so it is a
+// dependency of the same kind as the attachments — and a broken one shows on
+// every send rather than just the two flows that attach a PDF.
+{
+  const logo = 'email-logo.png'
+  const local = path.join(ROOT, 'site/public/brand', logo)
+  if (!fs.existsSync(local)) {
+    no(`${logo} is missing locally`, 'Run `npm run logo:email` to build it from the brand vectors.')
+  } else {
+    try {
+      const r = await fetch(`${SITE}/brand/${logo}`, { method: 'HEAD' })
+      if (r.ok) ok('Email logo reachable', `${(fs.statSync(local).size / 1024).toFixed(1)} kB`)
+      else no(`${logo} returns ${r.status} at ${SITE}`, 'Every email loads the logo from this URL — deploy the site, or point PUBLIC_SITE_URL at the deployment.')
+    } catch {
+      no(`${logo} unreachable at ${SITE}`, 'Every email loads the logo from this URL. Set PUBLIC_SITE_URL to a deployed origin.')
+    }
+  }
+}
+
 // ── Verdict ─────────────────────────────────────────────────────────────────
 head('Safe mode')
 if (safeMode === true) console.log('  Safe mode is ON — every email is redirected. Correct until launch.')

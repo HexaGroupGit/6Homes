@@ -11,7 +11,7 @@
 // there is no path that sends without leaving a record.
 import { createClient } from '@supabase/supabase-js'
 
-const DEFAULT_SAFE_RECIPIENT = 'melissa@6homes.com'
+export const DEFAULT_SAFE_RECIPIENT = 'eric@hexaspace.com.au'
 const RESEND_URL = 'https://api.resend.com/emails'
 
 // The settings row is read on nearly every send; cache it briefly so a burst

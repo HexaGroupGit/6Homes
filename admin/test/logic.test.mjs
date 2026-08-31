@@ -15,6 +15,8 @@ import assert from 'node:assert/strict'
 import { quoteTotals, quoteState, lineTotal, nextQuoteNumber, round2 } from '../src/lib/quoteMath.js'
 import { BUILD_STAGES, stageIndex, isFinalStage, stageById } from '../src/lib/projectStages.js'
 import { resolveIntent, INTENTS, daysBetween, notifyList, fillVars } from '../api/_leads.js'
+import { renderPreview } from '../api/_preview.js'
+import { ALL_EMAIL_TYPES } from '../src/lib/emailTypes.js'
 
 // ── GST and totals ──────────────────────────────────────────────────────────
 // Australian consumer pricing: line prices are GST-INCLUSIVE, so GST is backed
@@ -222,4 +224,51 @@ test('stage lookups behave at the edges', () => {
   assert.equal(isFinalStage('install'), true)
   assert.equal(isFinalStage('manufacture'), false)
   assert.equal(stageById('nonsense'), null)
+})
+
+// ── Template preview ────────────────────────────────────────────────────────
+// The Templates screen renders through api/_preview.js. These lock down the
+// contract that makes the preview trustworthy: every type the editor offers has
+// a builder behind it, and a draft is resolved the same way a real send would
+// resolve a saved template.
+
+test('every email type the editor offers can actually be rendered', () => {
+  for (const t of ALL_EMAIL_TYPES) {
+    const r = renderPreview({ emailType: t.type, settings: {} })
+    assert.ok(r, `${t.type} is offered in the editor but has no builder behind it`)
+    assert.ok(r.subject, `${t.type} rendered without a subject`)
+    assert.ok(r.html.includes('<html'), `${t.type} rendered without the branded frame`)
+  }
+})
+
+test('an empty draft previews the built-in, a filled one previews the override', () => {
+  const builtIn = renderPreview({ emailType: 'lead_consultation', content: '   ', settings: {} })
+  assert.equal(builtIn.usingDraft, false)
+  assert.match(builtIn.subject, /consultation/i)
+
+  const draft = renderPreview({
+    emailType: 'lead_consultation',
+    subject: 'A word, {{firstName}}',
+    content: '<p>About the {{design}}.</p>',
+    settings: {},
+  })
+  assert.equal(draft.usingDraft, true)
+  assert.equal(draft.subject, 'A word, Sarah', 'placeholders must fill in the subject too')
+  assert.match(draft.html, /About the The Yarra 3B\./)
+})
+
+test('preview placeholders resolve for build-stage emails as well as leads', () => {
+  const r = renderPreview({
+    emailType: 'project_stage_manufacture',
+    subject: '{{project}} — {{stage}}',
+    content: '<p>Hi {{firstName}}, {{company}} here.</p>',
+    settings: { company: { name: '6Homes' } },
+  })
+  assert.equal(r.subject, 'Whitfield residence — Manufacture')
+  assert.match(r.html, /Hi Sarah, 6Homes here\./)
+})
+
+test('an unrecognised template type previews as nothing rather than throwing', () => {
+  assert.equal(renderPreview({ emailType: 'project_stage_nonsense', settings: {} }), null)
+  assert.equal(renderPreview({ emailType: 'not_an_email', settings: {} }), null)
 })

@@ -25,6 +25,17 @@ export const DISPLAY = "'Helvetica Neue', Helvetica, Arial, sans-serif"
 
 const SITE = (process.env.PUBLIC_SITE_URL || 'https://6homes.com').replace(/\/+$/, '')
 
+// The real lockup, rasterised by scripts/make-email-logo.mjs — email clients do
+// not render SVG, so the site's vector assets cannot be reused here. Served at
+// 2x and declared at half size so it stays sharp on a retina screen. It has to
+// be an absolute URL on a public host: an email has no origin to resolve
+// against, and the admin is behind a login.
+const LOGO = {
+  src: `${SITE}/brand/email-logo.png`,
+  width: 175,
+  height: 38,
+}
+
 export const COMPANY = {
   name: '6Homes',
   tagline: 'Homes for everyone, everywhere',
@@ -122,7 +133,9 @@ export function brandFrame(inner, { footerLabel = '', preheader = '' } = {}) {
 
     <div style="text-align:center;padding:6px 0 22px">
       <a href="${SITE}" style="text-decoration:none">
-        <span style="font-family:${DISPLAY};font-size:22px;font-weight:700;letter-spacing:.06em;color:${NAVY}">6</span><span style="font-family:${DISPLAY};font-size:22px;font-weight:400;letter-spacing:.16em;color:${NAVY}">HOMES</span>
+        <!-- The type styles are for the ALT text: images are blocked by default in
+             plenty of clients, and this keeps the fallback reading as the wordmark. -->
+        <img src="${LOGO.src}" alt="6Homes" width="${LOGO.width}" height="${LOGO.height}" style="display:inline-block;width:${LOGO.width}px;height:${LOGO.height}px;border:0;outline:none;text-decoration:none;font-family:${DISPLAY};font-size:22px;font-weight:700;letter-spacing:.06em;color:${NAVY}" />
       </a>
     </div>
 

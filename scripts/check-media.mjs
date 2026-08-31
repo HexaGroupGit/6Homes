@@ -20,11 +20,14 @@ const walk = (dir) => {
   }
 }
 walk(path.join(ROOT, 'site', 'src'))
+// The branded emails pull the logo from the site's public folder too, so a
+// missing asset there breaks every outbound email — not just a page.
+walk(path.join(ROOT, 'admin', 'api'))
 
 const missing = new Map()
 for (const file of sources) {
   const text = fs.readFileSync(file, 'utf8')
-  for (const m of text.matchAll(/["'`](\/(?:media|downloads|brand)\/[A-Za-z0-9._@-]+)["'`]/g)) {
+  for (const m of text.matchAll(/["'`$}](\/(?:media|downloads|brand)\/[A-Za-z0-9._@-]+)["'`]/g)) {
     const ref = m[1]
     if (!fs.existsSync(path.join(PUBLIC, ref))) {
       if (!missing.has(ref)) missing.set(ref, new Set())
@@ -43,5 +46,5 @@ for (const [ref, files] of missing) {
   console.error(`  ${ref}`)
   for (const f of files) console.error(`      ${f}`)
 }
-console.error('\nRun `npm run migrate` to rebuild the library, or update the reference.\n')
+console.error('\nRun `npm run migrate` to rebuild the media library, `npm run logo` / `npm run logo:email` for brand assets, or update the reference.\n')
 process.exit(1)

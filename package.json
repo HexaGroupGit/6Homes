@@ -13,6 +13,7 @@
     "migrate": "node scripts/migrate-wordpress.mjs",
     "brochures": "node scripts/brochures/index.mjs",
     "logo": "node scripts/split-logo.mjs",
+    "logo:email": "node scripts/make-email-logo.mjs",
     "favicon": "node scripts/make-favicon.mjs",
     "check:media": "node scripts/check-media.mjs"
   },
