@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { Wordmark } from './PortalChrome.jsx'
 
 // Sign-in for customers. No password, because someone who opens this four times
@@ -34,7 +34,7 @@ export default function PortalLogin() {
     <div className="grid min-h-screen bg-brand-700 lg:grid-cols-[1fr_minmax(0,480px)]">
       {/* The claim, once, on the deep field the emails use. */}
       <div className="hidden flex-col justify-between p-12 text-white lg:flex xl:p-16">
-        <Wordmark tone="light" />
+        <Wordmark tone="light" className="h-10" />
         <div>
           <p className="font-mono text-[11px] tracking-[0.18em] text-brand-200 uppercase">Your build</p>
           <h1 className="mt-4 max-w-md text-4xl leading-[1.08] font-semibold tracking-tight xl:text-5xl">
@@ -50,7 +50,7 @@ export default function PortalLogin() {
 
       <div className="flex flex-col justify-center bg-white p-8 sm:p-12">
         <div className="mx-auto w-full max-w-sm">
-          <div className="mb-10 lg:hidden"><Wordmark /></div>
+          <div className="mb-10 lg:hidden"><Wordmark className="h-9" /></div>
 
           {sent ? (
             <>
@@ -77,20 +77,17 @@ export default function PortalLogin() {
 
               <form onSubmit={submit} className="mt-7">
                 <label className="label" htmlFor="portal-email">Email address</label>
-                <div className="relative">
-                  <Mail size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-mute" />
-                  <input
-                    id="portal-email"
-                    type="email"
-                    required
-                    autoFocus
-                    autoComplete="email"
-                    className="field pl-9"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+                <input
+                  id="portal-email"
+                  type="email"
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  className="field"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
 
                 {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
 

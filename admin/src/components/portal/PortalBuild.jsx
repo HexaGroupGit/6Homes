@@ -37,7 +37,7 @@ export default function PortalBuild({ build, email, onRefresh, others = [], onSw
       <header className="bg-brand-700 text-white">
         <div className="mx-auto max-w-5xl px-5 pt-6 pb-10 sm:px-8 sm:pt-8 sm:pb-14">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Wordmark tone="light" className="h-7" />
+            <Wordmark tone="light" className="h-8" />
             <div className="flex items-center gap-4 text-xs text-white/50">
               <span className="hidden sm:inline">{email}</span>
               <button onClick={signOut} className="inline-flex items-center gap-1.5 hover:text-white">
@@ -166,12 +166,20 @@ export default function PortalBuild({ build, email, onRefresh, others = [], onSw
           </ol>
 
           {(build.heroImage || build.floorplanImage) && (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className={cn('mt-8 grid gap-4', build.heroImage && build.floorplanImage && 'sm:grid-cols-2')}>
               {build.heroImage && (
-                <img src={mediaUrl(build.heroImage)} alt={build.designName} className="aspect-[4/3] w-full rounded-lg object-cover" />
+                <img
+                  src={mediaUrl(build.heroImage)}
+                  alt={build.designName}
+                  className="aspect-[16/9] w-full rounded-lg object-cover sm:aspect-[2/1]"
+                />
               )}
               {build.floorplanImage && (
-                <img src={mediaUrl(build.floorplanImage)} alt={`${build.designName} floor plan`} className="aspect-[4/3] w-full rounded-lg bg-white object-contain p-3" />
+                <img
+                  src={mediaUrl(build.floorplanImage)}
+                  alt={`${build.designName} floor plan`}
+                  className="aspect-[4/3] w-full rounded-lg bg-white object-contain p-3"
+                />
               )}
             </div>
           )}

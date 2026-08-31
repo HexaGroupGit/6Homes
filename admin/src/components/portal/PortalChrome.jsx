@@ -1,13 +1,20 @@
 import { cn } from '../../lib/utils.js'
 
-/** The real 6Homes lockup, in whichever version the background needs. */
+/**
+ * The 6Homes lockup, laid out horizontally.
+ *
+ * FullLogo.svg is the stacked version — 357 wide by 422 tall — so setting it to
+ * a header height renders a 27px-wide smudge. The mark and the wordmark are
+ * shipped as separate files precisely so a horizontal lockup can be composed,
+ * which is what a header bar wants.
+ */
 export function Wordmark({ tone = 'dark', className }) {
+  const light = tone === 'light'
   return (
-    <img
-      src={tone === 'light' ? '/brand/FullLogo_White.svg' : '/brand/FullLogo.svg'}
-      alt="6Homes"
-      className={cn('h-8 w-auto', className)}
-    />
+    <span className={cn('inline-flex items-center gap-2.5', className)} aria-label="6Homes" role="img">
+      <img src={light ? '/brand/mark-white.svg' : '/brand/mark.svg'} alt="" className="h-full w-auto" />
+      <img src={light ? '/brand/wordmark-white.svg' : '/brand/wordmark.svg'} alt="" className="h-[45%] w-auto" />
+    </span>
   )
 }
 
