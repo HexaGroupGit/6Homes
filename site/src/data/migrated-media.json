@@ -1,0 +1,218 @@
+{
+  "elsey": {
+    "heroImage": "/media/Elsey-Fulll.jpg",
+    "floorplanImage": "/media/Elsey-Floorplan.png",
+    "gallery": [
+      "/media/Elsey-Internal.jpg",
+      "/media/Elsey-internal-2.jpg"
+    ],
+    "priceFrom": 99999,
+    "publishPrice": false,
+    "areaExact": 20.4,
+    "moduleBase": "1 × 6.0m × 3.4m",
+    "tagline": "Small, complete, and genuinely liveable",
+    "description": "Our most compact home. One bedroom, one bathroom and an open living space in twenty square metres — enough for a studio, a guest suite, a short-stay rental, or a first step onto a block you already own."
+  },
+  "alton": {
+    "heroImage": "/media/Alton0001_2020-10-07.jpg",
+    "floorplanImage": "/media/Alton-Floorplan-1.png",
+    "gallery": [
+      "/media/Alton0003_2020-10-16_DARK.jpg",
+      "/media/Alton0003_2020-10-07.jpg"
+    ],
+    "priceFrom": 125500,
+    "publishPrice": false,
+    "areaExact": 20.4,
+    "moduleBase": "1 × 12.2m × 2.4m",
+    "tagline": "Room to breathe in a single-bedroom plan",
+    "description": "Arranged around a proper living area, so a one-bedroom home stops feeling like a room with a kitchen in it."
+  },
+  "avon": {
+    "heroImage": "/media/Avon0001_2020-10-24.jpg",
+    "floorplanImage": "/media/Avon-Floorplan-1.png",
+    "gallery": [
+      "/media/Avon-2.jpg",
+      "/media/Avon-1.jpg"
+    ],
+    "priceFrom": 155000,
+    "publishPrice": false,
+    "areaExact": 28.8,
+    "moduleBase": "2 × 6.0m × 2.4m",
+    "tagline": "The same footprint, a different way of living in it",
+    "description": "An alternative one-bedroom layout to the Alton, with the living and sleeping zones separated differently. Which one suits comes down to your block and its outlook."
+  },
+  "belford": {
+    "heroImage": "/media/Belford0001_2020-10-07.jpg",
+    "floorplanImage": "/media/Belford-Floorplanm.png",
+    "gallery": [
+      "/media/belford@hover3x.jpg",
+      "/media/Belford@3x-1.jpg"
+    ],
+    "priceFrom": 155000,
+    "publishPrice": false,
+    "areaExact": 40.8,
+    "moduleBase": "1 × 12.2m × 3.4m",
+    "tagline": "A full home at one-bedroom scale",
+    "description": "A generous bedroom, a full bathroom, and a living and kitchen space that works for more than one person. Popular as a granny flat and as a permanent single-residential home."
+  },
+  "murray": {
+    "heroImage": "/media/The-Murray-2-scaled-1.jpg",
+    "floorplanImage": "/media/Murray-Floorplan.png",
+    "gallery": [
+      "/media/6-1.jpg",
+      "/media/3-3.jpg"
+    ],
+    "tourUrl": "https://my.matterport.com/show/?m=M6Upp7SNQ35",
+    "priceFrom": 155000,
+    "publishPrice": false,
+    "areaExact": 40.8,
+    "moduleBase": "1 × 12.2m × 3.4m",
+    "tagline": "Two bedrooms without the footprint",
+    "description": "Our most efficient plan, and the one that turns up most often in our completed projects — from granny flats to short-stay accommodation."
+  },
+  "selina": {
+    "heroImage": "/media/new0003.jpg",
+    "floorplanImage": "/media/Selina-Floorplan.png",
+    "gallery": [
+      "/media/4-4.jpg",
+      "/media/2-6.jpg"
+    ],
+    "tourUrl": "https://my.matterport.com/show/?m=7Vnw6R18Lbx",
+    "priceFrom": 220000,
+    "publishPrice": false,
+    "areaExact": 57.6,
+    "moduleBase": "2 × 12.2m × 2.4m",
+    "tagline": "Double the comfort, perfectly balanced",
+    "description": "Two well-sized bedrooms, each with its own ensuite, positioned either side of a central living and kitchen area. It works as well for two households sharing as it does for a couple with regular guests."
+  },
+  "norfolk": {
+    "heroImage": "/media/Norfolk-2.jpg",
+    "floorplanImage": "/media/Norfolk-Floorplan.png",
+    "gallery": [
+      "/media/Norfolk-with-covered-deck.jpg",
+      "/media/2-hover.jpg"
+    ],
+    "priceFrom": null,
+    "priceNote": "POA",
+    "publishPrice": false,
+    "tagline": "Two bedrooms, and space to actually live",
+    "description": "Puts the floor area into the living spaces rather than the bedroom count. A comfortable permanent home for one or two people."
+  },
+  "miranda": {
+    "heroImage": "/media/Miranda@3x-2.jpg",
+    "floorplanImage": "/media/Miranda-Floorplan.png",
+    "gallery": [
+      "/media/2-4.jpg"
+    ],
+    "priceFrom": 340000,
+    "publishPrice": false,
+    "areaExact": 81.6,
+    "moduleBase": "1 × 12.2m × 3.4m + 2 × 6.0m × 3.4m",
+    "tagline": "A three-bedroom family plan",
+    "description": "Three bedrooms and two bathrooms, planned so the second bathroom does real work at the busy end of the morning."
+  },
+  "dawson": {
+    "heroImage": "/media/Dawson_0001_2020-10-07.jpg",
+    "floorplanImage": "/media/Dawson-Floorplan.png",
+    "gallery": [
+      "/media/Dawson_0004_2020-11-10.jpg"
+    ],
+    "priceFrom": 275000,
+    "publishPrice": false,
+    "areaExact": 81.6,
+    "moduleBase": "2 × 12.2m × 3.4m",
+    "tagline": "Three bedrooms, arranged differently",
+    "description": "The same size and bedroom count as the Miranda with a different arrangement — worth comparing the two floorplans against your block and its aspect."
+  },
+  "claremont": {
+    "heroImage": "/media/Clearmont0001_2020-10-26.jpg",
+    "floorplanImage": "/media/Claremont-Floorplan.png",
+    "gallery": [
+      "/media/Clearmont0003_2020-10-26.jpg"
+    ],
+    "priceFrom": null,
+    "priceNote": "POA",
+    "publishPrice": false,
+    "areaExact": 122.4,
+    "moduleBase": "3 × 12.2m × 3.4m",
+    "tagline": "Our largest home",
+    "description": "Four bedrooms and two bathrooms — a full family home, delivered as modules and installed in days rather than built on site over a year."
+  },
+  "lockyer-valley": {
+    "heroImage": "/media/WEdding-5.jpg",
+    "floorplanImage": "/media/Miranda-Floorplan.png",
+    "gallery": [
+      "/media/WEddig-2-1.jpg",
+      "/media/WEdding-3.jpg"
+    ]
+  },
+  "ipswich": {
+    "heroImage": "/media/3.jpg",
+    "floorplanImage": "/media/Murray-Floorplan.png",
+    "gallery": [
+      "/media/1.jpg",
+      "/media/5.jpg"
+    ]
+  },
+  "ballarat": {
+    "heroImage": "/media/Ballart.jpg",
+    "floorplanImage": "/media/Murray-Floorplan.png",
+    "gallery": [
+      "/media/3.jpg",
+      "/media/1.jpg",
+      "/media/5.jpg"
+    ]
+  },
+  "woodside-beach": {
+    "heroImage": "/media/3-1.jpg",
+    "floorplanImage": "/media/Belford-Floorplanm.png",
+    "gallery": [
+      "/media/8-1.jpg",
+      "/media/2.jpg",
+      "/media/Wood.jpg"
+    ]
+  },
+  "brisbane": {
+    "heroImage": "/media/new-farm-kitchen.jpg",
+    "gallery": [
+      "/media/new-farm-external.jpg",
+      "/media/new-farm-combined.jpg",
+      "/media/courtyard-path.jpg"
+    ]
+  },
+  "boonah-qld": {
+    "heroImage": "/media/Offgrid-2.jpg",
+    "floorplanImage": "/media/Selina-Floorplan.png",
+    "gallery": [
+      "/media/Offgrid-1.jpg",
+      "/media/Offgrid-7.jpg",
+      "/media/Untitled-design-24.jpg"
+    ]
+  },
+  "redbank-valley": {
+    "heroImage": "/media/Image_20240722173554.jpg",
+    "floorplanImage": "/media/Elsey-Floorplan.png",
+    "gallery": [
+      "/media/Image_20240722173500.jpg",
+      "/media/Image_20240722173519.jpg",
+      "/media/Untitled-design-25.jpg"
+    ]
+  },
+  "brisbane-2": {
+    "heroImage": "/media/garden-pod-4.jpg",
+    "floorplanImage": "/media/Elsey-Floorplan.png",
+    "gallery": [
+      "/media/garden-pod.jpg",
+      "/media/garden-pod-3.jpg",
+      "/media/Untitled-design-28.jpg"
+    ]
+  },
+  "tasmania": {
+    "heroImage": "/media/kitchen-and-living.jpg",
+    "floorplanImage": "/media/Belford-Floorplanm.png",
+    "gallery": [
+      "/media/external-3.jpg",
+      "/media/living-room.jpg"
+    ]
+  }
+}

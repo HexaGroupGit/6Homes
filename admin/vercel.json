@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/lead-nurture",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/consult-reminders",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/project-updates",
+      "schedule": "30 23 * * *"
+    }
+  ]
+}

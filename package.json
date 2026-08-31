@@ -1,0 +1,23 @@
+{
+  "name": "6homes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "6Homes — public website (site/) + custom CRM (admin/)",
+  "scripts": {
+    "dev": "concurrently -n site,admin -c cyan,magenta \"npm run dev --prefix site\" \"npm run dev --prefix admin\"",
+    "dev:site": "npm run dev --prefix site",
+    "dev:admin": "npm run dev --prefix admin",
+    "build": "npm run build --prefix site && npm run build --prefix admin",
+    "install:all": "npm install --prefix site && npm install --prefix admin",
+    "preflight": "node scripts/preflight.mjs",
+    "migrate": "node scripts/migrate-wordpress.mjs",
+    "brochures": "node scripts/brochures/index.mjs",
+    "logo": "node scripts/split-logo.mjs",
+    "favicon": "node scripts/make-favicon.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "puppeteer-core": "^25.9.0",
+    "sharp": "^0.35.4"
+  }
+}

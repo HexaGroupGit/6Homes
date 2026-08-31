@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+/* 6Homes admin — quiet, dense workbench on the real brand teal.
+   Palette sampled from the 6Homes mark: bright teal → deep teal → navy.
+   The customer-facing email brand lives in api/_brand.js. */
+@theme {
+  --color-brand-50: #f2fafb;
+  --color-brand-100: #ddf2f4;
+  --color-brand-200: #b8e5ea;
+  --color-brand-400: #13b7c4;
+  --color-brand-500: #15a2ae;
+  --color-brand-600: #0d7982;
+  --color-brand-700: #11555e;
+  --color-navy: #0e5476;
+  --color-ink: #16242c;
+  --color-mute: #64757e;
+  --color-hair: #dfe6e9;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-brand-50 text-ink antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Inputs get one consistent look so screens don't each invent their own. */
+.field {
+  @apply w-full rounded-md border border-hair bg-white px-3 py-2 text-sm outline-none;
+  @apply focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15;
+}
+
+.label {
+  @apply mb-1 block text-xs font-medium tracking-wide text-mute uppercase;
+}
+
+/* Declared with @utility, not as a plain class, so the variants below can
+   @apply it — Tailwind v4 only lets you @apply real utilities. */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium;
+  @apply transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-ink text-white hover:bg-ink/85;
+}
+
+@utility btn-secondary {
+  @apply btn border border-hair bg-white text-ink hover:bg-brand-50;
+}
+
+@utility btn-ghost {
+  @apply btn text-mute hover:bg-brand-100 hover:text-ink;
+}
+
+.card {
+  @apply rounded-lg border border-hair bg-white;
+}
