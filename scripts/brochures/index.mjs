@@ -16,7 +16,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { loadContent, prepareImages } from './data.mjs'
-import { DOCUMENTS } from './docs.mjs'
+import { DOCUMENTS, coverSources } from './docs.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const OUT = path.join(ROOT, 'site', 'public', 'downloads')
@@ -76,15 +76,19 @@ const sources = [
   ...designs.flatMap((d) => [d.heroImage, d.floorplanImage, ...(d.gallery ?? [])]),
   ...projects.flatMap((p) => [p.heroImage, p.floorplanImage, ...(p.gallery ?? [])]),
   '/media/Factory-5.jpg',
-  '/media/Install-4.png',
+  '/media/Install-4.jpg',
   '/media/Overhead-view.jpg',
 ]
-const img = await prepareImages(sources)
+const img = await prepareImages(sources, { hiRes: coverSources({ designs, projects }) })
 const mbOf = (n) => (n / 1048576).toFixed(1)
 console.log(
   `Images: ${img.total} used · ${img.built} optimised, ${img.cached} cached` +
-    `${img.missing ? `, ${img.missing} missing` : ''} — ${mbOf(img.bytesIn)} MB → ${mbOf(img.bytesOut)} MB`
+    `${img.missing.length ? `, ${img.missing.length} MISSING` : ''} — ${mbOf(img.bytesIn)} MB → ${mbOf(img.bytesOut)} MB`
 )
+// A referenced file that does not exist resolves to null and the page quietly
+// renders without it — which is how the factory cover spent its life as a flat
+// teal rectangle. Name them.
+for (const src of img.missing) console.warn(`  ! missing image: ${src}`)
 console.log(`Rendering with ${path.basename(browserPath)}\n`)
 
 const mb = (n) => (n / 1048576).toFixed(2) + ' MB'
@@ -126,6 +130,24 @@ async function render(key) {
     await page.evaluate(() => document.fonts.ready)
 
     const pageCount = await page.evaluate(() => document.querySelectorAll('.page').length)
+
+    // .page is overflow:hidden by design, so a page whose content runs long is
+    // clipped rather than reflowed — and clipped silently. Ask the DOM which
+    // pages overflow, so a layout change that no longer fits is a warning in
+    // the build rather than a missing line discovered in print.
+    const overflowing = await page.evaluate(() =>
+      [...document.querySelectorAll('.page')]
+        .map((el, i) => {
+          const pad = el.querySelector('.pad')
+          const over = Math.max(
+            el.scrollHeight - el.clientHeight,
+            pad ? pad.scrollHeight - pad.clientHeight : 0
+          )
+          return { page: i + 1, over: Math.round(over) }
+        })
+        // A millimetre of rounding is not an overflow; two is.
+        .filter((p) => p.over > 8)
+    )
     const pdfPath = path.join(OUT, doc.file)
     await page.pdf({
       path: pdfPath,
@@ -135,7 +157,7 @@ async function render(key) {
       margin: { top: 0, right: 0, bottom: 0, left: 0 },
       timeout: 180000,
     })
-    return { pageCount, pdfPath, htmlPath }
+    return { pageCount, pdfPath, htmlPath, overflowing }
   } finally {
     await browser.close().catch(() => {})
   }
@@ -146,8 +168,12 @@ for (const key of targets) {
   const started = Date.now()
 
   try {
-    const { pageCount, pdfPath, htmlPath } = await render(key)
+    const { pageCount, pdfPath, htmlPath, overflowing } = await render(key)
     if (!keepHtml) fs.unlinkSync(htmlPath)
+
+    for (const o of overflowing) {
+      console.warn(`  ! ${doc.label} page ${o.page} overflows its sheet by ${(o.over / 3.7795).toFixed(1)}mm — content is being clipped`)
+    }
 
     const size = fs.statSync(pdfPath).size
     const warn = size > 8 * 1048576 ? '  ⚠ over the 8 MB email attachment limit' : ''

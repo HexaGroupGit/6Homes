@@ -62,19 +62,46 @@ export async function loadContent() {
   }
 }
 
-// src → optimised file path, filled in by prepareImages().
+// `${role}|${src}` -> { file, width, height }, filled in by prepareImages().
+// Keyed by role because one photograph can be both a full-width cover plate and
+// a thumbnail on a design page, and those want very different encodings.
 const OPTIMISED = new Map()
 const ASSET_DIR = path.join(ROOT, 'scripts', 'out', 'brochure-assets')
 
-// Images are referenced as /media/x.png. For print we need absolute file URLs so
+/**
+ * How each kind of image is encoded, and why.
+ *
+ * The number that matters is not an image's pixel width but how many of those
+ * pixels survive per millimetre of paper. A cover plate spans the full 210mm
+ * page, so 1920px across it is 232 dpi — respectable. The same 1920px image
+ * cropped into a portrait full-bleed keeps only 764px of its width, which is
+ * 92 dpi, and under the old flat 1500px cap only 597px, which is 72 dpi and
+ * visibly soft. Covers are therefore never downscaled, and never cropped
+ * against their own aspect ratio — see cover() in blocks.mjs.
+ *
+ * Floorplans are line art: thin rules and dimension text are the entire point
+ * of the drawing, so they keep full chroma and a higher quality floor.
+ */
+const TIERS = {
+  cover:   { width: 2400, quality: 86, chroma: '4:4:4' },
+  plan:    { width: 2400, quality: 88, chroma: '4:4:4' },
+  default: { width: 1500, quality: 80, chroma: '4:2:0' },
+}
+
+// Floorplans are recognisable by name, so no caller has to say so.
+const roleFor = (src, role = null) => role ?? (/floor.?plan/i.test(src) ? 'plan' : 'default')
+
+// Images are referenced as /media/x.jpg. For print we need absolute file URLs so
 // Puppeteer can load them straight off disk without a server running.
-export function resolveImage(src) {
+export function resolveImage(src, role = null) {
   if (!src) return null
   if (/^https?:\/\//.test(src)) return src
 
-  // Prefer the print-optimised copy when one has been prepared.
-  const optimised = OPTIMISED.get(src)
-  if (optimised) return 'file:///' + optimised.replace(/\\/g, '/')
+  // Prefer the print-optimised copy when one has been prepared, falling back to
+  // the default tier so a caller asking for a tier that was never built still
+  // gets a picture rather than nothing.
+  const hit = OPTIMISED.get(`${roleFor(src, role)}|${src}`) ?? OPTIMISED.get(`default|${src}`)
+  if (hit) return 'file:///' + hit.file.replace(/\\/g, '/')
 
   const p = path.join(ROOT, 'site', 'public', src.replace(/^\//, ''))
   if (!fs.existsSync(p)) return null
@@ -82,59 +109,81 @@ export function resolveImage(src) {
 }
 
 /**
+ * Width / height of a prepared image, or null if it was never prepared.
+ * The cover sizes its photo band to the picture's own proportions with this,
+ * rather than cropping the picture to fit the band.
+ */
+export function imageAspect(src) {
+  if (!src) return null
+  for (const role of ['cover', 'plan', 'default']) {
+    const hit = OPTIMISED.get(`${role}|${src}`)
+    if (hit?.width && hit?.height) return hit.width / hit.height
+  }
+  return null
+}
+
+/**
  * Downscale and re-encode every image the brochures will use.
  *
  * The source photography is full-resolution PNG — several megabytes each — and
- * embedding those raw produced a 108 MB brochure and crashed the renderer on the
- * longer documents. At A4 an image never spans more than 210mm, so anything past
- * about 1500px is detail nobody can see. Resizing to that and encoding JPEG takes
- * the documents from a hundred megabytes to a few.
+ * embedding those raw produced a 108 MB brochure and crashed the renderer on
+ * the longer documents. Re-encoding to the tiers above keeps the documents at a
+ * few megabytes without the flat cap that used to soften the covers.
  *
- * Results are cached by source size and mtime, so a re-run is nearly instant.
+ * `hiRes` names the sources used as cover plates or full-bleed photographs;
+ * those are additionally prepared at the cover tier. Preparing a few more than
+ * are used costs build time, not document size — an unused variant is never
+ * embedded.
+ *
+ * Results are cached by tier, source size and mtime, so a re-run is near
+ * instant.
  */
-export async function prepareImages(sources) {
+export async function prepareImages(sources, { hiRes = [] } = {}) {
   const sharp = (await import('sharp')).default
   fs.mkdirSync(ASSET_DIR, { recursive: true })
 
-  const unique = [...new Set(sources.filter(Boolean))].filter((s) => !/^https?:\/\//.test(s))
+  const local = (s) => s && !/^https?:\/\//.test(s)
+  const jobs = new Map()
+  for (const src of sources.filter(local)) jobs.set(`${roleFor(src)}|${src}`, { src, role: roleFor(src) })
+  for (const src of hiRes.filter(local)) jobs.set(`cover|${src}`, { src, role: 'cover' })
+
   let built = 0
   let cached = 0
-  let missing = 0
   let bytesIn = 0
   let bytesOut = 0
+  const missing = []
 
-  for (const src of unique) {
+  for (const [key, { src, role }] of jobs) {
     const abs = path.join(ROOT, 'site', 'public', src.replace(/^\//, ''))
     if (!fs.existsSync(abs)) {
-      missing++
+      if (!missing.includes(src)) missing.push(src)
       continue
     }
 
     const stat = fs.statSync(abs)
+    const tier = TIERS[role]
     const base = path.basename(src).replace(/\.[^.]+$/, '')
-    const out = path.join(ASSET_DIR, `${base}-${stat.size}-${Math.round(stat.mtimeMs)}.jpg`)
+    const out = path.join(ASSET_DIR, `${base}-${role}-${stat.size}-${Math.round(stat.mtimeMs)}.jpg`)
 
     if (!fs.existsSync(out)) {
-      // Floorplans are line art — keep them larger and sharper, because thin
-      // rules and dimension text are the entire point of the drawing.
-      const isPlan = /floor.?plan/i.test(src)
       await sharp(abs)
         .rotate()
-        .resize({ width: isPlan ? 2200 : 1500, withoutEnlargement: true })
+        .resize({ width: tier.width, withoutEnlargement: true })
         .flatten({ background: '#ffffff' })
-        .jpeg({ quality: isPlan ? 88 : 80, mozjpeg: true, chromaSubsampling: isPlan ? '4:4:4' : '4:2:0' })
+        .jpeg({ quality: tier.quality, mozjpeg: true, chromaSubsampling: tier.chroma })
         .toFile(out)
       built++
     } else {
       cached++
     }
 
+    const meta = await sharp(out).metadata()
     bytesIn += stat.size
     bytesOut += fs.statSync(out).size
-    OPTIMISED.set(src, out)
+    OPTIMISED.set(key, { file: out, width: meta.width, height: meta.height })
   }
 
-  return { built, cached, missing, bytesIn, bytesOut, total: unique.length }
+  return { built, cached, missing, bytesIn, bytesOut, total: jobs.size }
 }
 
 export const money = (n) =>

@@ -2,7 +2,7 @@
 // brochures stay one family rather than five separate designs.
 
 import { css, PAGE, T } from './theme.mjs'
-import { COMPANY, resolveImage, specLine, money } from './data.mjs'
+import { COMPANY, resolveImage, imageAspect, specLine, money } from './data.mjs'
 
 export const esc = (s) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -35,20 +35,36 @@ export const page = (inner, { dark = false, panel = false, bare = false, folio =
     ${folio ? `<div class="folio"><span>${esc(folio.left ?? COMPANY.name)}</span><span>${esc(folio.right ?? '')}</span></div>` : ''}
   </section>`
 
-/** Full-bleed cover: photograph, scrim, wordmark, title, dimension rule. */
+/**
+ * Cover: a photograph at its own proportions, then the title block on solid
+ * ground beneath it.
+ *
+ * This was a full-bleed photograph. Every cover source is landscape — 1920x1080
+ * and similar — and cropping one into portrait A4 keeps only a narrow vertical
+ * slice: 764px of the 1920 stretched across 210mm, which is 92 dpi, and less
+ * once the old thumbnail cap had been applied. The band is sized to the
+ * picture's own aspect ratio instead, so nothing is thrown away and the whole
+ * 1920px spans the page at 232 dpi.
+ */
 export function cover({ image, kicker, title, subtitle, note }) {
-  const src = resolveImage(image)
+  const src = resolveImage(image, 'cover')
+  const aspect = imageAspect(image) ?? 16 / 9
+  // Clamped at both ends: a panorama should not thin into a stripe, and a
+  // squarer picture must not push the title block off the foot of the page.
+  const bandH = Math.max(100, Math.min(132, PAGE.w / aspect))
+
   return page(
-    `${src ? `<img class="bleed" src="${src}" alt="">` : `<div class="bleed" style="background:${T.deep}"></div>`}
-     <div class="bleed" style="background:linear-gradient(180deg, rgba(15,26,30,.62) 0%, rgba(15,26,30,.28) 42%, rgba(15,26,30,.88) 100%)"></div>
-     <div style="position:absolute;inset:0;padding:${PAGE.margin}mm;display:flex;flex-direction:column;justify-content:space-between">
+    `<div class="bleed" style="background:${T.deep}"></div>
+     <div style="position:absolute;top:34mm;left:0;right:0;height:${bandH}mm;overflow:hidden;background:${T.deep2}">
+       ${src ? `<img class="fit" src="${src}" alt="">` : ''}
+     </div>
+     <div style="position:absolute;inset:0;padding:${PAGE.margin}mm;display:flex;flex-direction:column">
        <div style="font-size:13pt">${wordmark(true)}</div>
-       <div>
-         ${kicker ? `<div class="spec" style="color:${T.teal};margin-bottom:6mm">${esc(kicker)}</div>` : ''}
-         <h1 class="display" style="color:#fff;max-width:150mm">${esc(title)}</h1>
-         ${subtitle ? `<p class="lead" style="color:rgba(255,255,255,.85);margin-top:7mm;max-width:110mm">${esc(subtitle)}</p>` : ''}
-         ${note ? `<div style="margin-top:10mm">${dim(note, true)}</div>` : ''}
-       </div>
+       <div class="grow"></div>
+       ${kicker ? `<div class="spec" style="color:${T.teal};margin-bottom:6mm">${esc(kicker)}</div>` : ''}
+       <h1 class="display" style="color:#fff;max-width:165mm">${esc(title)}</h1>
+       ${subtitle ? `<p class="lead" style="color:rgba(255,255,255,.85);margin-top:7mm;max-width:140mm">${esc(subtitle)}</p>` : ''}
+       ${note ? `<div style="margin-top:10mm">${dim(note, true)}</div>` : ''}
      </div>`,
     { bare: true }
   )
@@ -77,8 +93,14 @@ export function contents(items, { title = 'Contents' } = {}) {
 }
 
 /**
- * A full design spread: photograph across the top, specification and floorplan
- * beneath. One model per page so nothing is cramped.
+ * A full design spread: photograph and specification across the top, then the
+ * floorplan across the full width of the page.
+ *
+ * The floorplan used to share a two-column row with the specification, which
+ * printed it at 71 x 47mm — under three inches wide, with dimension text and
+ * room labels far too small to read. It is line art, and its whole purpose is
+ * to be read, so it now gets the full measure: 159 x 106mm, five times the
+ * area. The 1920px drawing lands at just over 300 dpi there.
  */
 export function designPage(d, { showPrice = true, folio } = {}) {
   const hero = resolveImage(d.heroImage)
@@ -96,30 +118,29 @@ export function designPage(d, { showPrice = true, folio } = {}) {
   return page(
     `<div class="eyebrow">${esc(specLine(d))}</div>
      <h2 class="display-s" style="margin-top:4mm">${esc(d.name)}</h2>
-     ${d.tagline ? `<p class="prose" style="margin-top:4mm;max-width:120mm">${esc(d.tagline)}</p>` : ''}
+     ${d.tagline ? `<p class="prose" style="margin-top:3mm;max-width:120mm">${esc(d.tagline)}</p>` : ''}
 
-     <div class="frame" style="height:72mm;margin-top:7mm">
-       ${hero ? `<img class="fit" src="${hero}" alt="">` : ''}
-     </div>
-
-     <div class="row" style="margin-top:7mm;flex:1;align-items:flex-start">
-       <div class="col" style="flex:1.05">
+     <div class="row" style="margin-top:6mm;align-items:stretch">
+       <div class="frame" style="flex:1.15;min-width:0;height:78mm">
+         ${hero ? `<img class="fit" src="${hero}" alt="">` : ''}
+       </div>
+       <div class="col" style="flex:1">
          <table class="spec-table">
            ${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}
          </table>
-         ${d.description ? `<p class="prose" style="margin-top:5mm">${esc(d.description)}</p>` : ''}
-       </div>
-       <div class="col" style="flex:1">
-         ${
-           plan
-             ? `<div class="spec" style="color:${T.mute};margin-bottom:3mm">Floorplan</div>
-                <div style="background:#fff;padding:5mm;height:70mm"><img class="contain" src="${plan}" alt=""></div>`
-             : ''
-         }
+         ${d.description ? `<p class="prose" style="margin-top:4mm;font-size:8.5pt">${esc(d.description)}</p>` : ''}
        </div>
      </div>
 
-     <div style="margin-top:6mm">${dim(`${d.areaExact ?? d.areaSqm} m²`)}</div>`,
+     ${
+       plan
+         ? `<div class="spec" style="color:${T.mute};margin-top:7mm;margin-bottom:3mm">Floorplan</div>
+            <div style="background:#fff;padding:4mm;height:114mm"><img class="contain" src="${plan}" alt=""></div>`
+         : ''
+     }
+
+     <div class="grow"></div>
+     <div>${dim(`${d.areaExact ?? d.areaSqm} m²`)}</div>`,
     { folio: folio ?? { right: d.name } }
   )
 }

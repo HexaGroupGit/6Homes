@@ -21,6 +21,31 @@ const pickImage = (designs, projects, prefer = []) => {
   return [...projects, ...designs].find((x) => resolveImage(x.heroImage))?.heroImage ?? null
 }
 
+// The factory document's three full-bleed plates. These were '/media/Install-4.png'
+// until the migration re-encoded the library to JPEG, at which point the cover
+// silently fell back to a flat teal rectangle — resolveImage returns null for a
+// path that does not exist, and nothing downstream complained.
+const FACTORY_SHOTS = ['/media/Factory-5.jpg', '/media/Install-4.jpg', '/media/Overhead-view.jpg']
+
+/**
+ * Every photograph that ends up as a cover plate or a full-bleed page, so the
+ * build can prepare those at the cover tier rather than the thumbnail one.
+ *
+ * pickImage can land on any project or design hero depending on what the
+ * migration produced, so all of them are listed rather than guessing. Preparing
+ * more than get used costs build time, not document size — a variant nothing
+ * references is never embedded.
+ */
+export function coverSources({ designs, projects }) {
+  return [
+    // The look book is full-bleed photography end to end, so its gallery shots
+    // need the cover tier just as much as the covers do.
+    ...projects.flatMap((p) => [p.heroImage, ...(p.gallery ?? [])]),
+    ...designs.map((d) => d.heroImage),
+    ...FACTORY_SHOTS,
+  ].filter(Boolean)
+}
+
 /** A simple editorial page: heading, lead, then a two-column list. */
 const listPage = (title, { eyebrow, lead, items, note, dark = false, panel = false, folio }) =>
   page(
@@ -222,9 +247,7 @@ export function productGuide({ designs, projects }) {
 // For commercial and developer enquiries: capability, method, and the structural
 // argument. Deliberately kept small enough to attach to an email.
 export function factory({ designs, projects }) {
-  const factoryShot = ['/media/Factory-5.jpg', '/media/Install-4.png', '/media/Overhead-view.jpg']
-    .map(resolveImage)
-    .filter(Boolean)
+  const factoryShot = FACTORY_SHOTS.map(resolveImage).filter(Boolean)
 
   const photoPage = (src, label) =>
     page(
@@ -236,7 +259,7 @@ export function factory({ designs, projects }) {
 
   return document('6Homes Factory Introduction', [
     cover({
-      image: '/media/Install-4.png',
+      image: FACTORY_SHOTS[1],
       kicker: 'Manufacturing capability',
       title: 'Built under cover, installed in days',
       subtitle:
