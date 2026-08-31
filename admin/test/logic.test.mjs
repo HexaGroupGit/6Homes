@@ -17,6 +17,10 @@ import { BUILD_STAGES, stageIndex, isFinalStage, stageById } from '../src/lib/pr
 import { resolveIntent, INTENTS, daysBetween, notifyList, fillVars } from '../api/_leads.js'
 import { renderPreview } from '../api/_preview.js'
 import { ALL_EMAIL_TYPES } from '../src/lib/emailTypes.js'
+import {
+  canAccessProject, clientEmails, fileRejectionReason, projectPrefix, safeFileName,
+  outstanding, byStage, DOC_LIBRARY, APPROVAL_LIBRARY, MAX_FILE_BYTES,
+} from '../src/lib/portal.js'
 
 // ── GST and totals ──────────────────────────────────────────────────────────
 // Australian consumer pricing: line prices are GST-INCLUSIVE, so GST is backed
@@ -271,4 +275,114 @@ test('preview placeholders resolve for build-stage emails as well as leads', () 
 test('an unrecognised template type previews as nothing rather than throwing', () => {
   assert.equal(renderPreview({ emailType: 'project_stage_nonsense', settings: {} }), null)
   assert.equal(renderPreview({ emailType: 'not_an_email', settings: {} }), null)
+})
+
+// ── Client portal ───────────────────────────────────────────────────────────
+// The access check and the upload guard are the two places where a mistake is
+// a disclosure rather than a bug, so they get pinned here.
+
+test('portal access is by exact address, case and whitespace insensitive', () => {
+  const project = { clientEmails: ['  Jane.Doe@Example.COM ', 'partner@example.com'] }
+
+  assert.equal(canAccessProject(project, 'jane.doe@example.com'), true)
+  assert.equal(canAccessProject(project, 'JANE.DOE@EXAMPLE.COM'), true)
+  assert.equal(canAccessProject(project, '  jane.doe@example.com  '), true)
+  assert.equal(canAccessProject(project, 'partner@example.com'), true)
+
+  assert.equal(canAccessProject(project, 'jane.doe@example.com.attacker.net'), false)
+  assert.equal(canAccessProject(project, 'example.com'), false)
+  assert.equal(canAccessProject(project, ''), false)
+  assert.equal(canAccessProject(project, null), false)
+})
+
+test('a project with nobody invited lets nobody in', () => {
+  for (const project of [{}, { clientEmails: [] }, { clientEmails: null }, { clientEmails: [''] }]) {
+    assert.equal(canAccessProject(project, 'anyone@example.com'), false)
+    assert.deepEqual(clientEmails(project), [])
+  }
+})
+
+test('clientEmails dedupes and normalises so one person is one entry', () => {
+  const project = { clientEmails: ['Jane@Example.com', 'jane@example.com', ' JANE@EXAMPLE.COM'] }
+  assert.deepEqual(clientEmails(project), ['jane@example.com'])
+})
+
+test('uploads are refused by extension, not by what the browser claims', () => {
+  const ok = (name, size = 1000) => fileRejectionReason({ name, size })
+
+  assert.equal(ok('title.pdf'), null)
+  assert.equal(ok('site.JPG'), null, 'extension matching is case-insensitive')
+  assert.equal(ok('survey.docx'), null)
+
+  // The things that make a private bucket into someone else's problem.
+  for (const bad of ['payload.html', 'run.exe', 'shell.sh', 'index.svg', 'noextension']) {
+    assert.match(ok(bad) ?? '', /can't accept/, `${bad} should be refused`)
+  }
+})
+
+test('an oversized file is refused with a size the customer can act on', () => {
+  const reason = fileRejectionReason({ name: 'plans.pdf', size: 40 * 1024 * 1024 })
+  assert.match(reason, /40\.0 MB/)
+  assert.match(reason, /limit is 25 MB/)
+  // Exactly at the limit is allowed; a byte over is not.
+  assert.equal(fileRejectionReason({ name: 'plans.pdf', size: MAX_FILE_BYTES }), null)
+  assert.notEqual(fileRejectionReason({ name: 'plans.pdf', size: MAX_FILE_BYTES + 1 }), null)
+})
+
+test('a storage prefix belongs to exactly one project', () => {
+  const a = projectPrefix('proj_alpha')
+  // The guard the attach and download paths rely on. `proj_alpha2` must not
+  // pass a startsWith check against `proj_alpha`.
+  assert.equal(`${a}req_1/file.pdf`.startsWith(a), true)
+  assert.equal(projectPrefix('proj_alpha2').startsWith(a), false, 'a longer id must not match a shorter one')
+  assert.equal('projects/proj_beta/req_1/file.pdf'.startsWith(a), false)
+  assert.equal('../projects/proj_alpha/x.pdf'.startsWith(a), false)
+})
+
+test('a filename cannot escape its folder or carry anything but a name', () => {
+  assert.equal(safeFileName('../../etc/passwd').includes('/'), false)
+  // Written with a char code because a raw template cannot end in a backslash.
+  const bs = String.fromCharCode(92)
+  assert.equal(safeFileName(`..${bs}..${bs}windows${bs}system32`).includes(bs), false)
+  assert.equal(safeFileName('my title deed (final).pdf'), 'my-title-deed-final-.pdf')
+  assert.equal(safeFileName(''), 'file')
+  assert.equal(safeFileName('x'.repeat(400)).length <= 90, true)
+})
+
+test('outstanding counts what the customer owes us, and nothing else', () => {
+  const project = {
+    docRequests: [
+      { id: 'a', status: 'requested' },
+      { id: 'b', status: 'rejected' },   // sent back — still theirs to do
+      { id: 'c', status: 'uploaded' },   // with us
+      { id: 'd', status: 'accepted' },   // done
+    ],
+    approvals: [{ id: 'e', status: 'pending' }, { id: 'f', status: 'approved' }],
+  }
+  const o = outstanding(project)
+  assert.deepEqual(o.docs.map((d) => d.id), ['a', 'b'])
+  assert.deepEqual(o.approvals.map((a) => a.id), ['e'])
+  assert.equal(o.total, 3)
+
+  assert.equal(outstanding({}).total, 0, 'a build with nothing set up owes nothing')
+})
+
+test('portal lists sort into build order, not insertion order', () => {
+  const items = [
+    { id: '1', stage: 'install' },
+    { id: '2', stage: 'site-assessment' },
+    { id: '3', stage: null },
+    { id: '4', stage: 'design' },
+  ]
+  assert.deepEqual(byStage(items).map((i) => i.id), ['3', '2', '4', '1'])
+})
+
+test('every document and approval in the library names a real build stage', () => {
+  for (const group of [...DOC_LIBRARY, ...APPROVAL_LIBRARY]) {
+    assert.ok(stageById(group.stage), `${group.stage} is not a build stage`)
+    for (const item of group.items) {
+      assert.ok(item.label?.trim(), 'every item needs a label')
+      assert.ok((item.note ?? item.body ?? '').trim(), `"${item.label}" needs to explain itself to the customer`)
+    }
+  }
 })

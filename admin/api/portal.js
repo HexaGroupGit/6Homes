@@ -118,7 +118,7 @@ function clientView(project, { design, customer } = {}) {
   return {
     id: project.id,
     name: project.name ?? 'Your build',
-    suburb: project.suburb ?? '',
+    suburb: project.suburb ?? project.location ?? '',
     designName: design?.name ?? project.designName ?? '',
     designSlug: design?.slug ?? '',
     heroImage: design?.heroImage ?? project.heroImage ?? null,
@@ -172,17 +172,25 @@ function clientView(project, { design, customer } = {}) {
 }
 
 async function hydrate(sb, projects) {
-  const designIds = [...new Set(projects.map((p) => p.designId).filter(Boolean))]
   const customerIds = [...new Set(projects.map((p) => p.customerId).filter(Boolean))]
 
+  // Projects link to a design two ways. Ones created from a won lead carry a
+  // `designId`; the migrated showcase projects only ever had a `designName`.
+  // Matching on id alone silently loses the bedroom count, the area and the
+  // floorplan on every migrated build, so try the name as well.
   const [designs, customers] = await Promise.all([
-    designIds.length ? sb.from('designs').select('id, data').in('id', designIds) : { data: [] },
+    sb.from('designs').select('id, data'),
     customerIds.length ? sb.from('customers').select('id, data').in('id', customerIds) : { data: [] },
   ])
-  const dMap = new Map((designs.data ?? []).map((d) => [d.id, row(d)]))
+  const all = (designs.data ?? []).map(row)
+  const byId = new Map(all.map((d) => [d.id, d]))
+  const byName = new Map(all.map((d) => [String(d.name ?? '').toLowerCase(), d]))
   const cMap = new Map((customers.data ?? []).map((c) => [c.id, row(c)]))
 
-  return projects.map((p) => clientView(p, { design: dMap.get(p.designId), customer: cMap.get(p.customerId) }))
+  const designFor = (p) =>
+    byId.get(p.designId) ?? byName.get(String(p.designName ?? '').toLowerCase()) ?? null
+
+  return projects.map((p) => clientView(p, { design: designFor(p), customer: cMap.get(p.customerId) }))
 }
 
 // ── Handler ─────────────────────────────────────────────────────────────────

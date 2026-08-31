@@ -43,7 +43,9 @@ export function BuildRail({ stages, tone = 'dark', className }) {
             />
             <div
               className={cn(
-                'mt-2.5 font-mono text-[9.5px] leading-tight tracking-[0.08em] uppercase sm:text-[10px]',
+                // Six labels across a phone is 60px each — unreadable, and the
+                // stage is named directly above and below the rail anyway.
+                'mt-2.5 hidden font-mono text-[9.5px] leading-tight tracking-[0.08em] uppercase sm:block sm:text-[10px]',
                 s.state === 'current'
                   ? light ? 'font-semibold text-white' : 'font-semibold text-navy'
                   : s.state === 'done'
