@@ -5,6 +5,7 @@ import {
   ENQUIRY_FORMS, FIELD_LABELS, BUDGET_OPTIONS, TIMEFRAME_OPTIONS,
   type Intent, type FormField,
 } from './config'
+import { contactError } from '@/lib/contact'
 
 const EMPTY: Record<FormField, string> = {
   name: '', email: '', phone: '', suburb: '', message: '', budget: '', timeframe: '',
@@ -53,14 +54,15 @@ export default function EnquiryModal({
     e.preventDefault()
     setError('')
 
-    // One of the two is enough — plenty of people leave a number and no email,
-    // and refusing those loses real customers.
-    if (!values.email.trim() && !values.phone.trim()) {
-      return setError('We need either an email address or a phone number to reply to you.')
-    }
+    // Empty required fields first, so someone who has filled in nothing is told
+    // that rather than being picked up on the format of a field they skipped.
     for (const field of config.required) {
       if (!values[field].trim()) return setError(`Please fill in ${FIELD_LABELS[field].toLowerCase()}.`)
     }
+    // Both contact details are required on every form, and both are checked
+    // again server-side — this only saves the visitor a round trip.
+    const contact = contactError(values)
+    if (contact) return setError(contact)
 
     setBusy(true)
     try {

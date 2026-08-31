@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { contactError } from '@/lib/contact'
 
 // Forwards website enquiries to the 6Homes CRM's public intake endpoint, which
 // creates the lead, sends the customer their acknowledgement (with the right
@@ -43,12 +44,10 @@ export async function POST(req: NextRequest) {
     source: str(body.source) || '6homes.com',
   }
 
-  if (!payload.email && !payload.phone) {
-    return NextResponse.json({ error: 'Please give us an email address or a phone number.' }, { status: 400 })
-  }
-  if (payload.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(payload.email)) {
-    return NextResponse.json({ error: 'That email address doesn’t look right.' }, { status: 400 })
-  }
+  // Both, on every form. The browser checks this too, but a form post is not
+  // obliged to come from our form.
+  const contact = contactError(payload)
+  if (contact) return NextResponse.json({ error: contact }, { status: 400 })
 
   // 1. Primary path — the CRM intake.
   try {

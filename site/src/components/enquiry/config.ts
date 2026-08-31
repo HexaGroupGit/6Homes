@@ -1,6 +1,11 @@
 // One definition per website form. The modal renders from this, and `intent` is
 // what the CRM routes on — so adding a form here is the whole job, provided the
 // CRM knows the same intent key (admin/api/_leads.js INTENTS).
+//
+// Every form requires a name, an email address and a phone number. The rule is
+// enforced three times over — here for the field markers, in EnquiryModal for
+// the message the visitor reads, and again server-side in the CRM — because a
+// browser check is a convenience, not a guarantee.
 
 export type Intent = 'consultation' | 'brochure' | 'pricelist' | 'domestic' | 'commercial' | 'tour'
 
@@ -24,7 +29,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     blurb:
       'A no-obligation conversation about your block, your budget and which home actually fits. We will tell you honestly if something will not work.',
     fields: ['name', 'email', 'phone', 'suburb', 'budget', 'timeframe', 'message'],
-    required: ['name'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Request a consultation',
     successTitle: 'Thanks — we will be in touch',
     successBody:
@@ -37,7 +42,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     blurb:
       'Every model we build, what comes standard, and how the process works from first conversation to handover. Sent to your inbox straight away.',
     fields: ['name', 'email', 'phone'],
-    required: ['name', 'email'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Send me the brochure',
     successTitle: 'On its way',
     successBody: 'Check your inbox — the brochure is attached. If it has not arrived in a few minutes, look in your spam folder.',
@@ -47,7 +52,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     blurb:
       'Base pricing for every model and a full breakdown of what is included, so you can see where your budget lands before you talk to anyone.',
     fields: ['name', 'email', 'phone', 'suburb'],
-    required: ['name', 'email'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Send me the price list',
     successTitle: 'On its way',
     successBody: 'Check your inbox — the price list is attached. Site works are quoted separately after a site assessment.',
@@ -56,7 +61,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     title: 'Project enquiry',
     blurb: 'Tell us about the home you are planning and we will come back to you within one business day.',
     fields: ['name', 'email', 'phone', 'suburb', 'budget', 'timeframe', 'message'],
-    required: ['name'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Send enquiry',
     successTitle: 'Thanks — we have got it',
     successBody: 'One of our team will review your enquiry and get back to you within one business day.',
@@ -68,7 +73,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     blurb:
       'Accommodation villages, tourism cabins, worker housing, multi-dwelling developments. Modular suits these well — the units are built under cover while your site works run in parallel.',
     fields: ['name', 'email', 'phone', 'suburb', 'timeframe', 'message'],
-    required: ['name'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Send enquiry',
     successTitle: 'Thanks — we have got it',
     successBody: 'One of our project team will call you directly to understand the scope.',
@@ -80,7 +85,7 @@ export const ENQUIRY_FORMS: Record<Intent, EnquiryConfig> = {
     blurb:
       'Photos only get you so far. Standing inside one tells you in five minutes what a brochure cannot. Our display showroom is at 878 Whitehorse Road, Box Hill.',
     fields: ['name', 'email', 'phone', 'message'],
-    required: ['name'],
+    required: ['name', 'email', 'phone'],
     submitLabel: 'Request a tour',
     successTitle: 'Thanks — we will confirm a time',
     successBody:

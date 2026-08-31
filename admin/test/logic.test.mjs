@@ -22,6 +22,7 @@ import {
   outstanding, byStage, DOC_LIBRARY, APPROVAL_LIBRARY, MAX_FILE_BYTES,
 } from '../src/lib/portal.js'
 import { ROLES, isFullAdmin, canManageStaff, canOpen, homePath, visibleNav } from '../src/lib/roles.js'
+import { contactError, emailError, phoneError } from '../api/_contact.js'
 
 // ── GST and totals ──────────────────────────────────────────────────────────
 // Australian consumer pricing: line prices are GST-INCLUSIVE, so GST is backed
@@ -456,4 +457,57 @@ test('the sidebar only offers what the role can open', () => {
   ]
   assert.deepEqual(visibleNav({ role: 'projects' }, NAV).map((n) => n.label), ['Designs', 'Projects'])
   assert.equal(visibleNav({ role: 'admin' }, NAV).length, NAV.length)
+})
+
+// ── Contact details on the website forms ────────────────────────────────────
+// Every form requires BOTH an email address and a phone number. The browser
+// checks it, the site's route checks it, and form-submit checks it again —
+// these pin the rule the last of those enforces, which is the only one that
+// cannot be skipped by posting directly.
+
+test('an enquiry needs both an email address and a phone number', () => {
+  assert.equal(contactError({ email: 'jane@example.com', phone: '0400 000 000' }), null)
+
+  assert.match(contactError({ email: '', phone: '0400000000' }), /need your email/i)
+  assert.match(contactError({ email: 'jane@example.com', phone: '' }), /need a phone/i)
+  assert.match(contactError({}), /need your email/i)
+})
+
+test('the email complaint comes before the phone one', () => {
+  // Someone who submits an empty form should be told about the first field
+  // they missed, not the last.
+  assert.match(contactError({ email: '', phone: '' }), /email/i)
+})
+
+test('real Australian phone formats are all accepted', () => {
+  for (const phone of [
+    '0400 000 000', '0400000000', '(03) 9123 4567', '03 9123 4567',
+    '+61 3 9123 4567', '+61400000000', '1800 646 637', '9123 4567',
+  ]) {
+    assert.equal(phoneError(phone), null, `${phone} should be accepted`)
+  }
+})
+
+test('a phone number that is not one is rejected', () => {
+  for (const phone of ['', '   ', 'n/a', 'none', '1234', '123 456', 'call me']) {
+    assert.notEqual(phoneError(phone), null, `"${phone}" should be rejected`)
+  }
+  // Long enough to be a phone number, too long to be any real one.
+  assert.match(phoneError('0400 000 000 000 000'), /too long/i)
+})
+
+test('email validation stays loose enough for real addresses', () => {
+  for (const email of [
+    'jane@example.com', 'jane.doe+builds@example.co.uk', "o'brien@example.com",
+    'jane@sub.domain.example.com', 'JANE@EXAMPLE.COM',
+  ]) {
+    assert.equal(emailError(email), null, `${email} should be accepted`)
+  }
+  for (const email of ['', 'jane', 'jane@', '@example.com', 'jane@example', 'jane doe@example.com']) {
+    assert.notEqual(emailError(email), null, `"${email}" should be rejected`)
+  }
+})
+
+test('whitespace alone is not a contact detail', () => {
+  assert.notEqual(contactError({ email: '   ', phone: '   ' }), null)
 })

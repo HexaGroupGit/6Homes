@@ -23,6 +23,7 @@ import {
 } from './_leads.js'
 import { teamNotifyEmail } from './_leadEmails.js'
 import { sendEmail } from './_email.js'
+import { contactError } from './_contact.js'
 
 const str = (v) => (typeof v === 'string' ? v.trim() : v == null ? '' : String(v).trim())
 
@@ -46,14 +47,14 @@ export default async function handler(req, res) {
   const source = str(body.source) || '6homes.com'
   const ref = str(body.ref)
 
-  // One of the two is enough — plenty of people leave a phone number and no
-  // email, and refusing those loses real customers.
-  if (!email && !phone) {
-    return res.status(400).json({ error: 'Please provide an email address or a phone number.' })
-  }
-  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return res.status(400).json({ error: 'That email address doesn\'t look right.' })
-  }
+  // Both an email address and a phone number, on every form. This is the real
+  // boundary: the website checks the same rule in the browser and again in its
+  // own route, but neither is binding — anything can POST here.
+  //
+  // Kept word-for-word in step with site/src/lib/contact.ts, so a visitor never
+  // sees one message from the browser and a different one from the server.
+  const contact = contactError({ email, phone })
+  if (contact) return res.status(400).json({ error: contact })
 
   const intentKey = resolveIntent(body.intent)
   const intent = INTENTS[intentKey]
