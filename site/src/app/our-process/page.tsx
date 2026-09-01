@@ -82,7 +82,7 @@ export default function ProcessPage() {
         <Faq items={FAQS} />
       </Section>
 
-      <section className="bg-deep py-20 text-white md:py-28">
+      <section className="bg-deep py-20 text-white md:py-28" data-bg="dark">
         <div className="container-page">
           <Reveal className="max-w-2xl">
             <p className="spec text-teal">Still unanswered</p>

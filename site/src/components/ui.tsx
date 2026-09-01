@@ -89,10 +89,17 @@ export function PageHero({
 }) {
   return (
     <section className="border-b border-rule bg-paper">
-      <div className="container-page grid items-end gap-x-16 gap-y-6 pt-28 pb-10 [&>*]:min-w-0 md:grid-cols-[1.35fr_1fr] md:pt-32 md:pb-12">
+      <div
+        className="container-page grid items-end gap-x-16 gap-y-6 pt-28 pb-10 [&>*]:min-w-0 md:grid-cols-[1.35fr_1fr] md:pt-32 md:pb-12"
+        data-rv-w
+      >
         <div>
-          {eyebrow && <p className="eyebrow animate-rise">{eyebrow}</p>}
-          <h1 className="display mt-4 animate-rise" style={{ animationDelay: '90ms' }}>
+          {eyebrow && (
+            <p className="eyebrow" data-rv="a">
+              {eyebrow}
+            </p>
+          )}
+          <h1 className="display mt-4" data-rv="h">
             {title}
           </h1>
         </div>
@@ -100,9 +107,17 @@ export function PageHero({
             an all-caps expanded title leaves at the right and keeps the page
             from opening with a column of dead air. */}
         {(children || dim) && (
-          <div className="animate-rise md:pb-2" style={{ animationDelay: '180ms' }}>
-            {children && <div className="prose-body max-w-md">{children}</div>}
-            {dim && <Dim className="mt-6">{dim}</Dim>}
+          <div className="md:pb-2">
+            {children && (
+              <div className="prose-body max-w-md" data-rv="p">
+                {children}
+              </div>
+            )}
+            {dim && (
+              <div data-rv="ctn">
+                <Dim className="mt-6">{dim}</Dim>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -128,18 +143,34 @@ export function Section({
   id?: string
 }) {
   return (
-    <section id={id} className={`${dark ? 'bg-deep text-white' : ''} py-16 md:py-24 ${className}`}>
+    <section
+      id={id}
+      className={`${dark ? 'bg-deep text-white' : ''} py-16 md:py-24 ${className}`}
+      data-bg={dark ? 'dark' : undefined}
+    >
       <div className="container-page">
         {(eyebrow || title) && (
           // Heading left, intro right — the same two-column head as PageHero, so
           // a section never opens with a lone line of type over empty space.
-          <Reveal className="grid items-end gap-x-16 gap-y-4 [&>*]:min-w-0 md:grid-cols-[1.35fr_1fr]">
+          <div className="grid items-end gap-x-16 gap-y-4 [&>*]:min-w-0 md:grid-cols-[1.35fr_1fr]" data-rv-w>
             <div>
-              {eyebrow && <p className={dark ? 'spec text-teal' : 'eyebrow'}>{eyebrow}</p>}
-              {title && <h2 className="display-sm mt-4">{title}</h2>}
+              {eyebrow && (
+                <p className={dark ? 'spec text-teal' : 'eyebrow'} data-rv="a">
+                  {eyebrow}
+                </p>
+              )}
+              {title && (
+                <h2 className="display-sm mt-4" data-rv="h">
+                  {title}
+                </h2>
+              )}
             </div>
-            {intro && <div className={`prose-body max-w-md md:pb-1 ${dark ? '!text-white/65' : ''}`}>{intro}</div>}
-          </Reveal>
+            {intro && (
+              <div className={`prose-body max-w-md md:pb-1 ${dark ? '!text-white/65' : ''}`} data-rv="p">
+                {intro}
+              </div>
+            )}
+          </div>
         )}
         <div className={eyebrow || title ? 'mt-10 md:mt-14' : ''}>{children}</div>
       </div>

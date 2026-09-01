@@ -67,8 +67,8 @@ export default function InclusionsScene({
   }, [items.length])
 
   return (
-    <div ref={root} className="scene h-[260svh]" data-bg="dark">
-      <section className="scene-screen bg-deep-2 text-white">
+    <div ref={root} className="is-scene scene h-[260svh]" data-bg="dark">
+      <section className="is-screen scene-screen bg-deep-2 text-white">
         <div className="plx-frame absolute inset-0">
           <Image
             src={image}
@@ -102,18 +102,15 @@ export default function InclusionsScene({
                 return (
                   <li
                     key={item}
+                    // Rendered fully lit; the dimming skin only applies under
+                    // html.has-motion, so no-JS readers get a readable list.
+                    data-state={lit || current ? 'lit' : 'dim'}
                     className={cnJoin(
-                      'flex items-baseline gap-5 border-b border-white/15 py-3 transition-all duration-500 ease-drafting sm:py-3.5',
-                      lit || current ? 'opacity-100' : 'opacity-30',
+                      'is-item flex items-baseline gap-5 border-b border-white/15 py-3 transition-all duration-500 ease-drafting sm:py-3.5',
                       current && 'pl-2'
                     )}
                   >
-                    <span
-                      className={cnJoin(
-                        'spec shrink-0 transition-colors duration-500',
-                        lit || current ? 'text-teal' : 'text-white/40'
-                      )}
-                    >
+                    <span className="is-idx spec shrink-0 text-teal transition-colors duration-500">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="text-[13px] leading-relaxed sm:text-[14px]">{item}</span>

@@ -57,22 +57,27 @@ export default async function DesignPage({ params }: { params: Promise<{ slug: s
             ← The range
           </Link>
 
-          <div className="mt-8 grid items-end gap-8 border-b border-rule pb-10 md:grid-cols-[1.4fr_1fr] md:gap-16">
+          <div
+            className="mt-8 grid items-end gap-8 border-b border-rule pb-10 md:grid-cols-[1.4fr_1fr] md:gap-16"
+            data-rv-w
+          >
             <div>
-              <p className="eyebrow animate-rise">{specLine(design)}</p>
-              <h1 className="display mt-5 animate-rise" style={{ animationDelay: '90ms' }}>
+              <p className="eyebrow" data-rv="a">
+                {specLine(design)}
+              </p>
+              <h1 className="display mt-5" data-rv="h">
                 {design.name}
               </h1>
             </div>
             {design.tagline && (
-              <p className="lead animate-rise text-mute md:pb-3" style={{ animationDelay: '180ms' }}>
+              <p className="lead text-mute md:pb-3" data-rv="p">
                 {design.tagline}
               </p>
             )}
           </div>
         </div>
 
-        <div className="relative mt-10 aspect-[16/9] w-full md:aspect-[21/9]">
+        <div className="plx-frame relative mt-10 aspect-[16/9] w-full md:aspect-[21/9]" data-rv="img" data-plx="img">
           {design.heroImage ? (
             <Image
               src={design.heroImage}
@@ -80,7 +85,7 @@ export default async function DesignPage({ params }: { params: Promise<{ slug: s
               fill
               priority
               sizes="100vw"
-              className="animate-fade object-cover"
+              className="object-cover"
             />
           ) : (
             <Frame alt={design.name} ratio="h-full" />
@@ -159,12 +164,21 @@ export default async function DesignPage({ params }: { params: Promise<{ slug: s
                 <h2 className="spec-lg text-teal-deep">Floorplan</h2>
                 {design.dimensions && <span className="font-mono text-[12px] text-mute">{design.dimensions}</span>}
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={design.floorplanImage}
-                alt={`${design.name} floorplan`}
-                className="mt-8 w-full bg-white object-contain p-6 md:p-12"
-              />
+              <a
+                href={design.floorplanImage}
+                target="_blank"
+                rel="noreferrer noopener"
+                title="Open the floorplan at full size"
+                className="block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={design.floorplanImage}
+                  alt={`${design.name} floorplan`}
+                  className="mt-8 w-full bg-white object-contain p-6 md:p-12"
+                />
+                <span className="spec mt-3 block text-mute md:hidden">Tap to open full size</span>
+              </a>
             </Reveal>
           </div>
         </section>
@@ -175,10 +189,10 @@ export default async function DesignPage({ params }: { params: Promise<{ slug: s
         <Section eyebrow="Inside" title={`The ${design.name}, built`}>
           <div className="grid gap-6 md:grid-cols-2">
             {design.gallery.map((src, i) => (
-              <Reveal key={src} delay={i * 80}>
+              <div key={src} className="plx-frame" data-rv="img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt={`${design.name} — ${i + 1}`} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-              </Reveal>
+              </div>
             ))}
           </div>
         </Section>
@@ -191,22 +205,23 @@ export default async function DesignPage({ params }: { params: Promise<{ slug: s
         </Section>
       )}
 
-      <section className="bg-deep py-20 text-white md:py-28">
+      <section className="bg-deep py-20 text-white md:py-28" data-bg="dark">
         <div className="container-page">
           <Reveal className="max-w-2xl">
-            <p className="spec text-teal">Display showroom</p>
-            <h2 className="display-sm mt-6">See the {design.name} in person</h2>
+            <p className="spec text-teal">Next step</p>
+            <h2 className="display-sm mt-6">Put the {design.name} on your block</h2>
             <p className="prose-body mt-6 max-w-lg !text-white/60">
-              {COMPANY.showroom}. Parking on site, and no appointment pressure — come and stand in one.
+              A no-obligation conversation about your site, your budget and whether the{' '}
+              {design.name} actually fits it. We will tell you honestly if it will not.
             </p>
             <EnquireButton
-              intent="tour"
+              intent="consultation"
               variant="outline-light"
               designSlug={design.slug}
               source={`design-${design.slug}`}
               className="mt-10"
             >
-              Book a showroom tour
+              Book a consultation
             </EnquireButton>
           </Reveal>
         </div>

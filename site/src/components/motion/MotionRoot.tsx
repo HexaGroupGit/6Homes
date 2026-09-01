@@ -25,6 +25,10 @@ export default function MotionRoot() {
   useEffect(() => {
     registerEases()
     if (prefersReduced() || lenis) return
+    // The CSS switch between "cinematic" and "plain" layouts. Only added when
+    // motion actually runs, so no-JS and reduced-motion both get the plain
+    // layouts from the same selector.
+    document.documentElement.classList.add('has-motion')
 
     lenis = new Lenis({
       duration: 1.2,

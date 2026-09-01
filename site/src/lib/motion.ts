@@ -236,26 +236,51 @@ export function wireParallax(root: HTMLElement | Document = document): () => voi
 // `.on-dark` while a dark section passes beneath its centre line.
 export function wireThemeSwap(root: HTMLElement | Document = document): () => void {
   const fixed = Array.from(document.querySelectorAll<HTMLElement>('[data-themed]'))
-  if (!fixed.length) return () => {}
-  const triggers: ScrollTrigger[] = []
-  for (const section of Array.from(root.querySelectorAll<HTMLElement>('[data-bg="dark"]'))) {
+  const sections = Array.from(root.querySelectorAll<HTMLElement>('[data-bg="dark"]'))
+  if (!fixed.length || !sections.length) return () => {}
+
+  // Stateless by design: on every tick, an element is dark iff any dark
+  // section's rect covers its centre line RIGHT NOW. The event-pair version
+  // (onEnter/onLeave counting) desynced on large programmatic jumps — rects
+  // cannot desync, because they carry no history.
+  const recompute = () => {
     for (const el of fixed) {
-      const centre = () => {
-        const r = el.getBoundingClientRect()
-        return r.top + r.height / 2
-      }
-      triggers.push(
-        ScrollTrigger.create({
-          trigger: section,
-          start: () => `top top+=${centre()}`,
-          end: () => `bottom top+=${centre()}`,
-          onToggle: (self) => el.classList.toggle('on-dark', self.isActive),
-        })
-      )
+      const r = el.getBoundingClientRect()
+      const centre = r.top + r.height / 2
+      const dark = sections.some((sec) => {
+        const sr = sec.getBoundingClientRect()
+        return sr.top <= centre && sr.bottom >= centre
+      })
+      el.classList.toggle('on-dark', dark)
     }
   }
+
+  // Driven by the ticker, not by scroll events: somewhere between Lenis and
+  // ScrollTrigger a lone programmatic jump's event gets swallowed, and a
+  // header that is illegible until the next wiggle is not acceptable. A
+  // scroll-position guard keeps the layout reads off the hot path when
+  // nothing is moving.
+  let lastY = -1
+  let settleFrames = 0
+  const tick = () => {
+    const y = window.scrollY
+    if (y !== lastY) {
+      lastY = y
+      settleFrames = 3 // keep checking briefly after movement stops
+      recompute()
+    } else if (settleFrames > 0) {
+      settleFrames--
+      recompute()
+    }
+  }
+  gsap.ticker.add(tick)
+  window.addEventListener('resize', recompute)
+  recompute()
+
   return () => {
-    for (const t of triggers) t.kill()
+    gsap.ticker.remove(tick)
+    window.removeEventListener('resize', recompute)
+    for (const el of fixed) el.classList.remove('on-dark')
   }
 }
 

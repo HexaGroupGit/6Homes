@@ -112,7 +112,7 @@ export default function DiveHero({
   }, [])
 
   return (
-    <div ref={root} className="scene h-[280svh] lg:h-[320svh]">
+    <div ref={root} className="dh-scene scene h-[280svh] lg:h-[300svh]">
       <section className="scene-screen bg-paper">
         {/* Photograph layer — full-bleed underneath, clipped to a plate at rest */}
         <div className="dh-media plx-frame absolute inset-0 bg-panel [clip-path:inset(0_0_0_55%)] max-lg:[clip-path:none]">

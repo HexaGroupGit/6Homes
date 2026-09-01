@@ -78,9 +78,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <MotionRoot />
           <Preloader />
           <Header />
-          {/* Content rides over the footer; the last scroll uncovers it. */}
-          <main className="page-over-footer flex-1">{children}</main>
-          <div className="footer-under" data-bg="dark">
+          <main className="flex-1">{children}</main>
+          <div data-bg="dark">
             <Footer />
           </div>
           <Ruler />

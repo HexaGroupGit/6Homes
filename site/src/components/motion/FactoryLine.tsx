@@ -66,8 +66,8 @@ export default function FactoryLine({
   }, [steps.length])
 
   return (
-    <div ref={root} className="scene bg-deep text-white lg:h-[420svh]" data-bg="dark">
-      <div className="lg:sticky lg:top-0 lg:h-svh lg:overflow-hidden">
+    <div ref={root} className="fl-scene scene bg-deep text-white lg:h-[380svh]" data-bg="dark">
+      <div className="fl-screen lg:sticky lg:top-0 lg:h-svh lg:overflow-hidden">
         {/* Fixed furniture inside the screen: eyebrow + progress counter */}
         <div className="container-page flex items-baseline justify-between pt-20 lg:absolute lg:inset-x-0 lg:top-0 lg:z-10 lg:pt-24">
           <p className="spec text-teal" data-rv="a">
@@ -105,8 +105,8 @@ export default function FactoryLine({
               data-rv-w
             >
               {/* The conveyor datum: a continuous rule with a tick per station */}
-              <div className="absolute top-[4.5rem] right-0 left-0 hidden border-t border-white/15 lg:block" />
-              <div className="absolute top-[4.05rem] left-10 hidden h-[0.95rem] border-l border-teal lg:block" />
+              <div className="fl-datum absolute top-[4.5rem] right-0 left-0 hidden border-t border-white/15 lg:block" />
+              <div className="fl-datum absolute top-[4.05rem] left-10 hidden h-[0.95rem] border-l border-teal lg:block" />
 
               <div className="lg:pt-24">
                 <span className="spec text-teal" data-rv="a">
@@ -139,7 +139,7 @@ export default function FactoryLine({
           ))}
 
           {/* Out-station: the CTA */}
-          <div className="shrink-0 lg:flex lg:w-[48vw] lg:items-center lg:px-16" data-rv-w>
+          <div className="shrink-0 lg:flex lg:w-[100vw] lg:items-center lg:px-16" data-rv-w>
             <div>
               <p className="spec text-white/40" data-rv="a">
                 Permits through handover

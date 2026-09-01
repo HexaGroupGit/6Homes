@@ -102,21 +102,7 @@ export default async function ToursPage() {
         )}
       </div>
 
-      <section className="bg-deep py-20 text-white md:py-28">
-        <div className="container-page">
-          <Reveal className="max-w-2xl">
-            <Dim tone="light">Better in person</Dim>
-            <h2 className="display-sm mt-8">A tour still beats a screen</h2>
-            <p className="prose-body mt-6 max-w-lg !text-white/60">
-              Five minutes inside a finished home tells you what a walkthrough cannot — the ceiling height, the joinery,
-              the way the light lands. {COMPANY.showroom}.
-            </p>
-            <EnquireButton intent="tour" variant="outline-light" source="tours-cta" className="mt-10">
-              Book a showroom tour
-            </EnquireButton>
-          </Reveal>
-        </div>
-      </section>
+      
     </>
   )
 }

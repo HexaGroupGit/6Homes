@@ -36,7 +36,7 @@
      headings do not look like every other grotesque set at default width. */
   .display {
     font-variation-settings: 'wdth' 118, 'wght' 700;
-    @apply text-[clamp(2.3rem,5.2vw,4.75rem)] leading-[0.92] tracking-[-0.025em] uppercase;
+    @apply text-[clamp(2.15rem,5.2vw,4.75rem)] leading-[0.92] tracking-[-0.025em] uppercase;
   }
 
   .display-sm {
@@ -294,20 +294,28 @@ html.lenis body {
 }
 
 /* ── Header theme states ────────────────────────────────────────────────
-   Transparent at the top of the page; a blurred paper (or glassy ink) bar
-   once scrolled, chosen by which kind of section is passing beneath. The
-   .on-dark class is toggled by the scroll system, not by React. */
+   The DEFAULT is a solid paper bar — legible over anything, which is what a
+   browser without scripting gets. Only once the motion system is live
+   (html.has-motion) does the bar go transparent at the top and start theme-
+   swapping with the sections beneath it. The .on-dark class is toggled by
+   the scroll system, not by React. */
 .site-header {
-  background: transparent;
-  border-bottom: 1px solid transparent;
+  background: rgb(242 244 244 / 0.94);
+  border-bottom: 1px solid #c9d4d6;
+  backdrop-filter: blur(8px);
 }
-.site-header.is-scrolled:not(.on-dark),
+html.has-motion .site-header {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+}
+html.has-motion .site-header.is-scrolled:not(.on-dark),
 .site-header.is-open {
   background: rgb(242 244 244 / 0.94);
   border-bottom-color: #c9d4d6;
   backdrop-filter: blur(8px);
 }
-.site-header.on-dark.is-scrolled:not(.is-open) {
+html.has-motion .site-header.on-dark.is-scrolled:not(.is-open) {
   background: rgb(15 26 30 / 0.35);
   border-bottom-color: rgb(255 255 255 / 0.12);
   backdrop-filter: blur(8px);
@@ -367,22 +375,6 @@ html.lenis body {
   opacity: 0;
 }
 
-/* ── Footer reveal ───────────────────────────────────────────────────────
-   The page content rides above the footer (z-10, opaque background); the
-   footer sits sticky at the viewport bottom, so the last scroll uncovers it —
-   the sheet lifting off the desk. Pure CSS; no measurements, no JS. */
-.page-over-footer {
-  position: relative;
-  z-index: 10;
-  background: #f2f4f4;
-  box-shadow: 0 24px 48px rgb(10 26 30 / 0.18);
-}
-.footer-under {
-  position: sticky;
-  bottom: 0;
-  z-index: 0;
-}
-
 /* Hide the native scrollbar on desktop — the ruler is the scrollbar. */
 @media (min-width: 1024px) and (scripting: enabled) {
   html {
@@ -391,4 +383,55 @@ html.lenis body {
   html::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* ── Plain layouts when motion is off ───────────────────────────────────
+   html.has-motion is added only when Lenis + the scrub timelines actually
+   start (JS present, no reduced-motion preference). Everything below returns
+   the scroll scenes to ordinary, complete documents when it is absent — the
+   sweep found the horizontal process line hiding four of its six steps from
+   no-JS and reduced-motion readers, which is content loss, not degradation. */
+html:not(.has-motion) .dh-scene,
+html:not(.has-motion) .fl-scene,
+html:not(.has-motion) .is-scene {
+  height: auto !important;
+}
+html:not(.has-motion) .dh-scene .scene-screen {
+  position: relative;
+}
+html:not(.has-motion) .fl-screen {
+  position: static;
+  height: auto;
+  overflow: visible;
+}
+html:not(.has-motion) .fl-track {
+  flex-direction: column;
+  align-items: stretch;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  gap: 3.5rem;
+  padding: 2.5rem 1.5rem 5rem;
+}
+html:not(.has-motion) .fl-track > div {
+  width: auto !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+html:not(.has-motion) .fl-datum {
+  display: none;
+}
+html:not(.has-motion) .is-screen {
+  position: static;
+  height: auto;
+  min-height: 100svh;
+  overflow: visible;
+}
+
+/* The inclusions list is fully lit unless the motion system is walking it. */
+html.has-motion .is-item[data-state='dim'] {
+  opacity: 0.3;
+}
+html.has-motion .is-item[data-state='dim'] .is-idx {
+  color: rgb(255 255 255 / 0.4);
 }

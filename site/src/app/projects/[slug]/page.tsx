@@ -52,21 +52,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           </Link>
 
           <div className="mt-8 border-b border-rule pb-10">
-            <p className="eyebrow animate-rise">{project.location ?? 'Project'}</p>
-            <h1 className="display mt-5 max-w-4xl animate-rise" style={{ animationDelay: '90ms' }}>
+            <p className="eyebrow" data-rv="a">
+              {project.location ?? 'Project'}
+            </p>
+            <h1 className="display mt-5 max-w-4xl" data-rv="h">
               {project.designName ? `${project.designName}` : project.name}
             </h1>
             {project.category && (
-              <p className="lead mt-6 animate-rise text-mute" style={{ animationDelay: '180ms' }}>
+              <p className="lead mt-6 text-mute" data-rv="p">
                 Built as {project.category.toLowerCase()}
               </p>
             )}
           </div>
         </div>
 
-        <div className="relative mt-10 aspect-[16/9] w-full md:aspect-[21/9]">
+        <div className="plx-frame relative mt-10 aspect-[16/9] w-full md:aspect-[21/9]" data-rv="img" data-plx="img">
           {project.heroImage ? (
-            <Image src={project.heroImage} alt={project.name} fill priority sizes="100vw" className="animate-fade object-cover" />
+            <Image src={project.heroImage} alt={project.name} fill priority sizes="100vw" className="object-cover" />
           ) : (
             <Frame alt={project.name} ratio="h-full" />
           )}
@@ -116,10 +118,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         <Section eyebrow="On site" title="The build" className="border-t border-rule">
           <div className="grid gap-6 md:grid-cols-2">
             {project.gallery.map((src, i) => (
-              <Reveal key={src} delay={i * 70}>
+              <div key={src} className="plx-frame" data-rv="img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt={`${project.name} — ${i + 1}`} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-              </Reveal>
+              </div>
             ))}
           </div>
         </Section>
