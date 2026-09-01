@@ -5,6 +5,9 @@ import { COMPANY } from '@/data/content'
 import { EnquiryProvider } from '@/components/enquiry/EnquiryProvider'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import MotionRoot from '@/components/motion/MotionRoot'
+import Preloader from '@/components/motion/Preloader'
+import Ruler from '@/components/motion/Ruler'
 
 // Archivo carries the whole voice. Loading the width axis is the point — the
 // headings are set expanded (wdth 118), which is what makes them read as
@@ -72,9 +75,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <EnquiryProvider>
+          <MotionRoot />
+          <Preloader />
           <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          {/* Content rides over the footer; the last scroll uncovers it. */}
+          <main className="page-over-footer flex-1">{children}</main>
+          <div className="footer-under" data-bg="dark">
+            <Footer />
+          </div>
+          <Ruler />
         </EnquiryProvider>
       </body>
     </html>

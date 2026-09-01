@@ -151,3 +151,244 @@
     scroll-behavior: auto;
   }
 }
+
+/* ── GSAP motion system ─────────────────────────────────────────────────
+   The declarative layer (data-rv / data-plx) is wired by src/lib/motion.ts.
+   Same gating philosophy as .reveal above: elements start hidden ONLY where
+   scripting is available to reveal them, so no-JS and crawlers get the page
+   plainly. GSAP lifts the gate imperatively (autoAlpha) once initial states
+   are applied. */
+@media (scripting: enabled) {
+  [data-rv] {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rv] {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+/* Lenis's recommended host styles. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* SplitText line masks — overflow clipping is what makes lines "rise in". */
+.rv-line {
+  overflow: hidden;
+}
+
+/* Media inside a parallax or dive frame needs room to move without showing
+   its edges. */
+.plx-frame {
+  overflow: hidden;
+}
+.plx-frame > img,
+.plx-frame > video {
+  will-change: transform;
+}
+
+/* ── Dive hero, small screens ───────────────────────────────────────────
+   Below lg the title block sits over the photograph rather than on paper,
+   so its type flips to white and its buttons to the light variant. */
+@media (max-width: 1023px) {
+  .dh-title {
+    color: #fff;
+  }
+  .dh-title .spec {
+    color: rgb(255 255 255 / 0.75);
+  }
+  .dh-title .lead {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .dh-title .btn {
+    border-color: rgb(255 255 255 / 0.6);
+    color: #fff;
+  }
+  .dh-title .btn:hover {
+    background: #fff;
+    color: #0f1a1e;
+  }
+}
+
+/* ── Sticky scene scaffolding ───────────────────────────────────────────
+   The reference architecture: no ScrollTrigger pins anywhere. A scene is an
+   over-tall wrapper with a 100vh sticky screen inside it; the timeline scrubs
+   across the wrapper's full scroll length. */
+.scene {
+  position: relative;
+}
+.scene-screen {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* ── The ruler ──────────────────────────────────────────────────────────
+   The site's scrollbar, drawn as a drafting ruler down the right edge.
+   Fixed chrome; swaps tone over dark sections via .on-dark. */
+.ruler {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  z-index: 60;
+  display: none;
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .ruler {
+    display: block;
+  }
+}
+.ruler-ticks {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 7px,
+    color-mix(in srgb, currentColor 28%, transparent) 7px,
+    color-mix(in srgb, currentColor 28%, transparent) 8px
+  );
+  background-size: 8px 40px;
+  background-position: right 6px top;
+  background-repeat: repeat-y;
+}
+.ruler-thumb {
+  position: absolute;
+  right: 4px;
+  width: 12px;
+  height: 1px;
+  background: currentColor;
+}
+.ruler-thumb::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-right: 5px solid currentColor;
+}
+.ruler,
+.site-header {
+  color: var(--chrome-ink, #0f1a1e);
+  transition: color 0.4s var(--ease-drafting);
+}
+.ruler.on-dark,
+.site-header.on-dark {
+  --chrome-ink: #f2f4f4;
+  color: #f2f4f4;
+}
+
+/* ── Header theme states ────────────────────────────────────────────────
+   Transparent at the top of the page; a blurred paper (or glassy ink) bar
+   once scrolled, chosen by which kind of section is passing beneath. The
+   .on-dark class is toggled by the scroll system, not by React. */
+.site-header {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+}
+.site-header.is-scrolled:not(.on-dark),
+.site-header.is-open {
+  background: rgb(242 244 244 / 0.94);
+  border-bottom-color: #c9d4d6;
+  backdrop-filter: blur(8px);
+}
+.site-header.on-dark.is-scrolled:not(.is-open) {
+  background: rgb(15 26 30 / 0.35);
+  border-bottom-color: rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(8px);
+}
+.site-header .hdr-link {
+  color: #5b6b71;
+}
+.site-header .hdr-link:hover {
+  color: #0f1a1e;
+}
+.site-header .hdr-link.is-active {
+  color: #00727e;
+}
+.site-header .hdr-phone {
+  color: #0f1a1e;
+}
+.site-header .hdr-phone:hover {
+  color: #00727e;
+}
+.site-header.on-dark:not(.is-open) .hdr-link {
+  color: rgb(242 244 244 / 0.65);
+}
+.site-header.on-dark:not(.is-open) .hdr-link:hover {
+  color: #f2f4f4;
+}
+.site-header.on-dark:not(.is-open) .hdr-link.is-active {
+  color: #00bdca;
+}
+.site-header.on-dark:not(.is-open) .hdr-phone {
+  color: rgb(242 244 244 / 0.85);
+}
+.site-header.on-dark:not(.is-open) .hdr-phone:hover {
+  color: #00bdca;
+}
+/* The consultation button flips to its light variant over dark scenes. */
+.site-header.on-dark:not(.is-open) .btn {
+  border-color: rgb(255 255 255 / 0.5);
+  color: #fff;
+}
+.site-header.on-dark:not(.is-open) .btn:hover {
+  background: #fff;
+  color: #0f1a1e;
+}
+
+/* Wordmark auto tone: colour on light, white artwork over dark scenes. */
+.wm-auto .wm-white {
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-drafting);
+}
+.wm-auto .wm-colour {
+  transition: opacity 0.4s var(--ease-drafting);
+}
+.on-dark:not(.is-open) .wm-auto .wm-white {
+  opacity: 1;
+}
+.on-dark:not(.is-open) .wm-auto .wm-colour {
+  opacity: 0;
+}
+
+/* ── Footer reveal ───────────────────────────────────────────────────────
+   The page content rides above the footer (z-10, opaque background); the
+   footer sits sticky at the viewport bottom, so the last scroll uncovers it —
+   the sheet lifting off the desk. Pure CSS; no measurements, no JS. */
+.page-over-footer {
+  position: relative;
+  z-index: 10;
+  background: #f2f4f4;
+  box-shadow: 0 24px 48px rgb(10 26 30 / 0.18);
+}
+.footer-under {
+  position: sticky;
+  bottom: 0;
+  z-index: 0;
+}
+
+/* Hide the native scrollbar on desktop — the ruler is the scrollbar. */
+@media (min-width: 1024px) and (scripting: enabled) {
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}

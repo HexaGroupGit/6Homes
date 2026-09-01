@@ -36,12 +36,13 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-40 bg-paper/95 text-ink backdrop-blur transition-colors duration-500 ease-drafting ${
-        scrolled || open ? 'border-b border-rule' : 'border-b border-transparent'
-      }`}
+      data-themed
+      className={`site-header fixed inset-x-0 top-0 z-40 transition-colors duration-500 ease-drafting ${
+        scrolled || open ? 'is-scrolled' : ''
+      } ${open ? 'is-open' : ''}`}
     >
       <div className="container-page flex h-16 items-center justify-between gap-8 md:h-20">
-        <Wordmark />
+        <Wordmark tone="auto" />
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
           {NAV.map((item) => {
@@ -51,8 +52,8 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`spec transition-colors duration-500 ease-drafting ${
-                  active ? 'text-teal-deep' : 'text-mute hover:text-ink'
+                className={`hdr-link spec transition-colors duration-500 ease-drafting ${
+                  active ? 'is-active' : ''
                 }`}
               >
                 {item.label}
@@ -62,7 +63,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-7 lg:flex">
-          <a href={COMPANY.phoneHref} className="font-mono text-[12px] text-navy transition-colors hover:text-teal-deep">
+          <a href={COMPANY.phoneHref} className="hdr-phone font-mono text-[12px] transition-colors">
             {COMPANY.phone}
           </a>
           <EnquireButton intent="consultation" source="header" className="!px-6 !py-3">
