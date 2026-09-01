@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-inout: cubic-bezier(0.75, 0, 0.25, 1);
+    /* The chamfer — lifted from the logo's own 45° corner cuts. */
+    --cut: 14px;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-paper font-sans text-neutral-800;
+  }
+
+  ::selection {
+    background: #0a0a0b;
+    color: #f7f6f2;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-neutral-800 ring-offset-2 ring-offset-paper;
+  }
+}
+
+@layer components {
+  /* ── Type roles ────────────────────────────────────────────────────────
+     Marcellus carries the display voice — Trajan-blooded caps, generously
+     letterspaced, always uppercase. Cormorant italic is the accent that
+     leans across it, one word at a time. Kumbh Sans does the quiet work. */
+  .display {
+    @apply font-display text-[clamp(2.5rem,7vw,6.5rem)] leading-[1.02] tracking-[0.04em] uppercase;
+  }
+
+  .display-md {
+    @apply font-display text-[clamp(1.9rem,4.2vw,3.6rem)] leading-[1.06] tracking-[0.05em] uppercase;
+  }
+
+  .display-sm {
+    @apply font-display text-[clamp(1.35rem,2.4vw,2rem)] leading-[1.12] tracking-[0.06em] uppercase;
+  }
+
+  .accent-script {
+    @apply font-script text-[0.42em] normal-case tracking-normal;
+  }
+
+  .caps {
+    @apply font-sans text-[11px] font-medium tracking-caps uppercase;
+  }
+
+  .body-copy {
+    @apply font-sans text-[15px] leading-[1.85] text-stone;
+  }
+
+  .lead {
+    @apply font-sans text-[clamp(1rem,1.4vw,1.2rem)] leading-[1.7] font-light;
+  }
+
+  /* ── The chamfer ───────────────────────────────────────────────────────
+     Every framed thing on the site cuts its corners at 45° — the wordmark's
+     own geometry, applied to plates, buttons and the intro frame. */
+  .cut-corners {
+    clip-path: polygon(
+      var(--cut) 0,
+      calc(100% - var(--cut)) 0,
+      100% var(--cut),
+      100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%,
+      var(--cut) 100%,
+      0 calc(100% - var(--cut)),
+      0 var(--cut)
+    );
+  }
+
+  .btn-x {
+    @apply caps inline-flex items-center justify-center gap-3 px-7 py-4 transition-colors duration-500;
+    clip-path: polygon(
+      10px 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% calc(100% - 10px),
+      calc(100% - 10px) 100%,
+      10px 100%,
+      0 calc(100% - 10px),
+      0 10px
+    );
+  }
+
+  .btn-x-dark {
+    @apply bg-black text-white hover:bg-neutral-800;
+  }
+
+  .btn-x-light {
+    @apply bg-white text-black hover:bg-neutral-200;
+  }
+
+  .btn-x-line {
+    @apply border-b border-current pb-1 !px-0 !py-0 hover:opacity-60;
+    clip-path: none;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-page px-6 md:px-10 lg:px-16;
+  }
+}
+
+/* ── Reveal gates ─────────────────────────────────────────────────────────
+   Identical philosophy to the 6Homes build: hidden ONLY where scripting can
+   reveal; reduced-motion and no-JS read everything plainly. */
+@media (scripting: enabled) {
+  [data-rv] {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-rv] {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.rv-line {
+  overflow: hidden;
+}
+.plx-frame {
+  overflow: hidden;
+}
+.plx-frame > img,
+.plx-frame > video {
+  will-change: transform;
+}
+
+.scene {
+  position: relative;
+}
+.scene-screen {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* ── The cloud marquee ────────────────────────────────────────────────────
+   The reference mechanic, rebuilt: a track holding four copies of one
+   translucent cloud strip, drifting on a pure-CSS keyframe. -50% of a
+   four-copy track is exactly two copies, so the loop is seamless. Every
+   second copy is flipped vertically so the repetition doesn't read. Speeds
+   differ per layer purely by strip width. */
+.marquee {
+  overflow: clip;
+  pointer-events: none;
+  display: flex;
+}
+.marquee-track {
+  display: flex;
+  flex-shrink: 0;
+  will-change: transform;
+  animation: cloud-drift var(--drift, 60s) linear infinite reverse;
+}
+.marquee-track > img {
+  flex-shrink: 0;
+  height: var(--cloud-h, 340px);
+  width: auto;
+  max-width: none;
+}
+.marquee-track > img:nth-child(even) {
+  transform: scaleY(-1);
+}
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ── The dome ─────────────────────────────────────────────────────────────
+   A plain section with an enormous top radius, sliding up in normal flow
+   over the sticky hero — the shape IS the transition. */
+.dome {
+  border-top-left-radius: 50rem;
+  border-top-right-radius: 50rem;
+}
+
+/* ── Header theme ────────────────────────────────────────────────────────
+   Solid safe default; transparency and swapping only once motion runs. */
+.xh-header {
+  background: rgb(10 10 11 / 0.92);
+  backdrop-filter: blur(8px);
+  transition:
+    background 0.4s var(--ease-out),
+    color 0.4s var(--ease-out);
+  color: #fff;
+}
+html.has-motion .xh-header {
+  background: transparent;
+  backdrop-filter: none;
+}
+html.has-motion .xh-header.is-scrolled {
+  background: rgb(10 10 11 / 0.85);
+  backdrop-filter: blur(8px);
+}
+/* Over light sections the fixed chrome flips to ink. */
+html.has-motion .xh-header.on-light:not(.is-open) {
+  color: #0a0a0b;
+}
+html.has-motion .xh-header.on-light.is-scrolled:not(.is-open) {
+  background: rgb(247 246 242 / 0.9);
+}
+.xh-header .logo-black,
+.xh-header .logo-white {
+  transition: opacity 0.4s var(--ease-out);
+}
+.xh-header .logo-black {
+  opacity: 0;
+}
+html.has-motion .xh-header.on-light:not(.is-open) .logo-black {
+  opacity: 1;
+}
+html.has-motion .xh-header.on-light:not(.is-open) .logo-white {
+  opacity: 0;
+}
+
+/* ── Plain layouts when motion is off ────────────────────────────────────
+   Same contract as the 6Homes site: html.has-motion gates every cinematic
+   layout; without it the scenes are ordinary complete documents. */
+html:not(.has-motion) .dh-scene,
+html:not(.has-motion) .sv-scene {
+  height: auto !important;
+}
+html:not(.has-motion) .dh-scene .scene-screen {
+  position: relative;
+}
+html:not(.has-motion) .sv-screen {
+  position: static;
+  height: auto;
+  overflow: visible;
+}
+html:not(.has-motion) .sv-track {
+  flex-direction: column;
+  align-items: stretch;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  gap: 3.5rem;
+  padding: 2.5rem 1.5rem 5rem;
+}
+html:not(.has-motion) .sv-track > div {
+  width: auto !important;
+}
+html:not(.has-motion) .ix-scene {
+  height: auto !important;
+}
+html:not(.has-motion) .ix-screen {
+  position: static;
+  height: auto;
+  min-height: 100svh;
+  overflow: visible;
+}
+html.has-motion .ix-item[data-state='dim'] {
+  opacity: 0.3;
+}
+
+/* Ring button — straight label inside a drawn ring; the two 15° ticks grow
+   into the full circle on hover. */
+.ring-btn {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.ring-btn svg {
+  position: absolute;
+  inset: 0;
+}
+.ring-btn circle {
+  fill: none;
+  stroke-width: 1;
+}
