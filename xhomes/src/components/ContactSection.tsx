@@ -5,13 +5,12 @@ import { COMPANY } from '@/data/content'
 import RingButton from '@/components/RingButton'
 
 /**
- * The enquiry form. Submits into the group's CRM intake (the same pipeline the
- * 6Homes site feeds), tagged source x-homes.com.au so Tom and Wayne see these
- * leads under their own banner in the portal they already have logins for.
- * Falls back to a mailto link if the endpoint is unreachable — an enquiry must
- * never dead-end.
+ * The enquiry form. Submits to this site's own /api/enquire, which emails the
+ * enquiry straight to the X-Homes inbox — X-Homes is its own company, and its
+ * leads never touch the 6Homes CRM. On failure the visitor is pointed at the
+ * phone number, so an enquiry can't silently dead-end.
  */
-const INTAKE = 'https://portal.6homes.com/api/form-submit'
+const INTAKE = '/api/enquire'
 
 type State = 'idle' | 'busy' | 'done' | 'error'
 
@@ -26,25 +25,17 @@ export default function ContactSection() {
     setState('busy')
     setError('')
 
-    const message = [
-      f.get('message'),
-      f.get('company') ? `Company: ${f.get('company')}` : null,
-      f.get('site') ? `Project address: ${f.get('site')}` : null,
-    ]
-      .filter(Boolean)
-      .join('\n')
-
     try {
       const r = await fetch(INTAKE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          intent: 'commercial',
           name: f.get('name'),
           email: f.get('email'),
           phone: f.get('phone'),
-          message,
-          source: 'x-homes.com.au',
+          company: f.get('company'),
+          site: f.get('site'),
+          message: f.get('message'),
           website: f.get('website'), // honeypot
         }),
       })
